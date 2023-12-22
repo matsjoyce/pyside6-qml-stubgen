@@ -7,13 +7,13 @@ TARGET_DIR = pathlib.Path(__file__).parent / "target"
 REFERENCE_DIR = pathlib.Path(__file__).parent / "reference"
 
 
-def test_run_and_compare(tmp_path: pathlib.Path):
+def test_run_and_compare(tmp_path: pathlib.Path) -> None:
     pyside6_qml_stubgen.process(
         in_dir=TARGET_DIR.relative_to(pathlib.Path().resolve()),
         ignore_dirs=[],
         out_dir=tmp_path,
-        metatypes_dir=pathlib.Path("/usr/lib/qt6/metatypes"),
-        qmltyperegistrar_path=pathlib.Path("/usr/lib/qt6/qmltyperegistrar"),
+        metatypes_dir=None,
+        qmltyperegistrar_path=None,
         file_relative_path=TARGET_DIR.parent.parent,
     )
 

@@ -6,8 +6,8 @@ Usage:
 
 Options:
     --ignore=<path>                     Ignore all Python files that are children of thispath
-    --metatypes-dir=<dir>               Directory of the Qt 6 metatype files for core modules [default: /usr/lib/qt6/metatypes]
-    --qmltyperegistrar-path=<path>      Path of the qmltyperegistrar tool [default: /usr/lib/qt6/qmltyperegistrar]
+    --metatypes-dir=<dir>               Directory of the Qt 6 metatype files for core modules (automatically detected if not provided)
+    --qmltyperegistrar-path=<path>      Path of the qmltyperegistrar tool (automatically detected if not provided)
 """
 
 import collections
@@ -438,15 +438,50 @@ def parse_method(
     }
 
 
+def detect_metatypes_dir() -> pathlib.Path:
+    bundled_dir = pathlib.Path(QtCore.__file__).parent / "Qt" / "metatypes"
+    if bundled_dir.is_dir():
+        return bundled_dir
+
+    sys_dir = pathlib.Path("/usr/lib/qt6/metatypes")
+    if sys_dir.is_dir():
+        return sys_dir
+
+    raise RuntimeError(
+        "Could not find metatypes dir. Provide it manually using the --metatypes-dir option"
+    )
+
+
+def detect_qmltyperegistrar_path() -> pathlib.Path:
+    bundled_path = (
+        pathlib.Path(QtCore.__file__).parent / "Qt" / "libexec" / "qmltyperegistrar"
+    )
+    if bundled_path.is_file():
+        return bundled_path
+
+    sys_path = pathlib.Path("/usr/lib/qt6/qmltyperegistrar")
+    if sys_path.is_file():
+        return sys_path
+
+    raise RuntimeError(
+        "Could not find qmltyperegistrar. Provide it manually using the --qmltyperegistrar-path option"
+    )
+
+
 def process(
     in_dir: pathlib.Path,
     ignore_dirs: typing.Sequence[pathlib.Path],
     out_dir: pathlib.Path,
-    metatypes_dir: pathlib.Path,
-    qmltyperegistrar_path: pathlib.Path,
+    metatypes_dir: pathlib.Path | None,
+    qmltyperegistrar_path: pathlib.Path | None,
     *,
-    file_relative_path: pathlib.Path | None = None,
+    file_relative_path: pathlib.Path | None = pathlib.Path(__file__).parent,
 ) -> None:
+    if metatypes_dir is None:
+        metatypes_dir = detect_metatypes_dir()
+    if qmltyperegistrar_path is None:
+        qmltyperegistrar_path = detect_qmltyperegistrar_path()
+
     extra_info = patches()
 
     if out_dir.exists():
@@ -528,8 +563,14 @@ def main() -> None:
         in_dir=pathlib.Path(args["<in-dir>"]),
         ignore_dirs=[pathlib.Path(ig) for ig in args["--ignore"]],
         out_dir=pathlib.Path(args["--out-dir"]),
-        metatypes_dir=pathlib.Path(args["--metatypes-dir"]),
-        qmltyperegistrar_path=pathlib.Path(args["--qmltyperegistrar-path"]),
+        metatypes_dir=(
+            pathlib.Path(args["--metatypes-dir"]) if args["--metatypes-dir"] else None
+        ),
+        qmltyperegistrar_path=(
+            pathlib.Path(args["--qmltyperegistrar-path"])
+            if args["--qmltyperegistrar-path"]
+            else None
+        ),
     )
 
 

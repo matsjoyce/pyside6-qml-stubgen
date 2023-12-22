@@ -3,26 +3,26 @@ name = "pyside6-qml-stubgen"
 version = "0.1.0"
 description = "Generate QML stub files (.qmltypes) from Python modules (which use PySide6)"
 authors = [
-  {name = "Matthew Joyce"},
+    {name = "Matthew Joyce"},
 ]
 readme = "README.md"
 dependencies = [
-  "PySide6>=6.4",
-  "docopt"
+    "PySide6>=6.4",
+    "docopt"
 ]
 requires-python = ">= 3.10"
 keywords = ["qml", "type checking", "pyside6", "qt6"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Environment :: X11 Applications :: Qt",
-  "Intended Audience :: Developers",
-  "Topic :: Software Development :: Build Tools",
-  "Topic :: Software Development :: Quality Assurance",
-  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Quality Assurance",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 [project.urls]
@@ -32,6 +32,14 @@ Issues = "https://github.com/matsjoyce/pyside6-qml-stubgen/issues"
 
 [project.scripts]
 pyside6-qml-stubgen = "pyside6_qml_stubgen:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "mypy",
+    "black",
+    "types-docopt"
+]
 
 [build-system]
 requires = ["hatchling"]

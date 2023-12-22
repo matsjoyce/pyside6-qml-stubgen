@@ -29,5 +29,5 @@ class Singleton3(QtCore.QObject):
 
 
 QtQml.qmlRegisterSingletonInstance(
-    Singleton3, "target", 1, 0, "Singleton3", lambda _: Singleton3()
+    Singleton3, "target", 1, 0, "Singleton3", Singleton3()
 )

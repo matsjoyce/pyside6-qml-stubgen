@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        sudo apt install -y libegl1-mesa-dev
+        python -m pip install --upgrade pip
+        pip install .[dev]
+    - name: Check formatting with black
+      run: |
+        black --check .
+    - name: Type check with mypy
+      run: |
+        mypy pyside6_qml_stubgen.py tests --exclude tests/target
+    - name: Test with pytest
+      run: |
+        pytest
