@@ -9,8 +9,8 @@ Installation
 This tool is not yet distributed though pip, so instead clone the repo and then install using pip:
 
 ```bash
-$ git clone https://github.com/matsjoyce/pyside6-qml-stubgen.git
-$ pip install ./https://github.com/matsjoyce/pyside6-qml-stubgen.git
+git clone https://github.com/matsjoyce/pyside6-qml-stubgen.git
+pip install ./pyside6-qml-stubgen
 ```
 
 Simple example
@@ -37,7 +37,7 @@ Links to other projects
 
 This tool relies heavily on PySide6, and is inspired by the [`metaobjectdump.py`](https://code.qt.io/cgit/pyside/pyside-setup.git/tree/sources/pyside-tools/metaobjectdump.py) tool, although this tool uses a runtime approach instead of static analysis, as that works better on large programs.
 
-Tool has been tested on Arch Linux, and should run on other Linux distributions (although you may need to provide some paths to the tool using the command-line flags).
+This tool has been tested on Arch Linux, and should run on other Linux distributions (although you may need to provide some paths to the tool using the command-line flags if the defaults are not correct).
 
 This tool does not run on Windows yet (but I will be working on it soon). It does not run with PyQt6 either, although it should be possible in theory (send a PR if you get it working). And finally, it does not run using Qt 5 (PySide2 or PyQt5), as that version is no longer being developed, and QML in Qt 5 has less features than in Qt 6.
 

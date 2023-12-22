@@ -17,6 +17,7 @@ import inspect
 import itertools
 import json
 import pathlib
+import shlex
 import shutil
 import subprocess
 import sys
@@ -25,6 +26,8 @@ import typing
 
 import docopt
 from PySide6 import QtCore, QtQml
+
+T_TypeQObject = typing.TypeVar("T_TypeQObject", bound=QtCore.QObject)
 
 
 @dataclasses.dataclass
@@ -49,11 +52,71 @@ def patch_with(mod: types.ModuleType) -> typing.Callable[[typing.Callable], None
     return w
 
 
-def patches() -> ExtraCollectedInfo:
-    info = ExtraCollectedInfo()
+def patch_functions(info: ExtraCollectedInfo) -> None:
+    @patch_with(QtQml)
+    def qmlRegisterSingletonInstance(
+        type_obj: type[QtCore.QObject],
+        uri: str,
+        version_major: int,
+        version_minor: int,
+        qml_name: str,
+        callback: object,
+    ) -> None:
+        info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
+        info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
+        info.registered_classes[uri, version_major, version_minor].append(type_obj)
 
-    T_TypeQObject = typing.TypeVar("T_TypeQObject", bound=QtCore.QObject)
+    @patch_with(QtQml)
+    def qmlRegisterSingletonType(
+        type_obj: type[QtCore.QObject],
+        uri: str,
+        version_major: int,
+        version_minor: int,
+        qml_name: str,
+        callback: object = None,
+    ) -> None:
+        info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
+        info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
+        info.registered_classes[uri, version_major, version_minor].append(type_obj)
 
+    @patch_with(QtQml)
+    def qmlRegisterType(
+        type_obj: type[QtCore.QObject],
+        uri: str,
+        version_major: int,
+        version_minor: int,
+        qml_name: str,
+    ) -> None:
+        info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
+        info.registered_classes[uri, version_major, version_minor].append(type_obj)
+
+    @patch_with(QtQml)
+    def qmlRegisterUncreatableMetaObject(
+        staticMetaObject: QtCore.QMetaObject,
+        uri: str,
+        versionMajor: int,
+        versionMinor: int,
+        qmlName: str,
+        reason: str,
+    ) -> None:
+        raise RuntimeError("qmlRegisterUncreatableMetaObject not supported yet")
+
+    @patch_with(QtQml)
+    def qmlRegisterUncreatableType(
+        type_obj: type[QtCore.QObject],
+        uri: str,
+        version_major: int,
+        version_minor: int,
+        qml_name: str,
+        message: str,
+    ) -> None:
+        info.extra_class_infos[type_obj].append(("QML.Creatable", "false"))
+        info.extra_class_infos[type_obj].append(("QML.UncreatableReason", message))
+        info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
+        info.registered_classes[uri, version_major, version_minor].append(type_obj)
+
+
+def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     def go_up(frame: types.FrameType | None) -> types.FrameType | None:
         return frame.f_back if frame else None
 
@@ -65,29 +128,6 @@ def patches() -> ExtraCollectedInfo:
         major = glob["QML_IMPORT_MAJOR_VERSION"]
         minor = glob.get("QML_IMPORT_MINOR_VERSION", 0)
         return name, major, minor
-
-    @patch_with(QtQml)
-    def qmlRegisterSingletonType(
-        uri: str,
-        major: int,
-        minor: int,
-        name: str,
-        cls: type[T_TypeQObject],
-        old_fn: typing.Callable,
-    ) -> None:
-        info.extra_class_infos[cls].append(("QML.Singleton", "true"))
-        info.registered_classes[uri, major, minor].append(cls)
-
-    @patch_with(QtQml)
-    def qmlRegisterType(
-        uri: str,
-        major: int,
-        minor: int,
-        name: str,
-        cls: type[T_TypeQObject],
-        old_fn: typing.Callable,
-    ) -> None:
-        info.extra_class_infos[cls].append(("QML.Element", "auto"))
 
     @patch_with(QtQml)
     def QmlSingleton(
@@ -105,18 +145,70 @@ def patches() -> ExtraCollectedInfo:
         return cls
 
     @patch_with(QtQml)
+    def QmlAnonymous(
+        cls: type[T_TypeQObject], old_fn: typing.Callable
+    ) -> type[T_TypeQObject]:
+        info.extra_class_infos[cls].append(("QML.Element", "anonymous"))
+        info.registered_classes[get_module()].append(cls)
+        return cls
+
+    @patch_with(QtQml)
+    def QmlNamedElement(name: str, old_fn: typing.Callable) -> type[T_TypeQObject]:
+        def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            info.extra_class_infos[cls].append(("QML.Element", name))
+            info.registered_classes[get_module()].append(cls)
+            return cls
+
+        return w
+
+    @patch_with(QtQml)
     def QmlUncreatable(
         reason: str | None = None, *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
             info.extra_class_infos[cls].append(("QML.Creatable", "false"))
             if reason is not None:
-                info.extra_class_infos[cls].append(("QML.UncreatableReason", "true"))
+                info.extra_class_infos[cls].append(("QML.UncreatableReason", reason))
 
             return cls
 
         return w
 
+    @patch_with(QtQml)
+    def QmlForeign(
+        type: type, *, old_fn: typing.Callable
+    ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            # XXX Not sure if it should be the class name, or something similar
+            info.extra_class_infos[cls].append(("QML.Foreign", type.__name__))
+            return cls
+
+        return w
+
+    @patch_with(QtQml)
+    def QmlExtended(
+        type: type, *, old_fn: typing.Callable
+    ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            # XXX Not sure if it should be the class name, or something similar
+            info.extra_class_infos[cls].append(("QML.Extended", type.__name__))
+            return cls
+
+        return w
+
+    @patch_with(QtQml)
+    def QmlAttached(
+        type: type, *, old_fn: typing.Callable
+    ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            # XXX Not sure if it should be the class name, or something similar
+            info.extra_class_infos[cls].append(("QML.Attached", type.__name__))
+            return cls
+
+        return w
+
+
+def patch_meta_system(info: ExtraCollectedInfo) -> None:
     @patch_with(QtCore)
     def Property(
         type: type | str,
@@ -159,6 +251,14 @@ def patches() -> ExtraCollectedInfo:
         info.signal_types[sig] = (types, None)
 
         return sig
+
+
+def patches() -> ExtraCollectedInfo:
+    info = ExtraCollectedInfo()
+
+    patch_functions(info)
+    patch_class_decorators(info)
+    patch_meta_system(info)
 
     return info
 
@@ -317,6 +417,9 @@ def main() -> None:
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir()
+    (out_dir / "README").write_text(
+        f"QML type stubs generated automatically using\n{shlex.join(sys.argv)}"
+    )
 
     in_dir = pathlib.Path(args["<in-dir>"])
     ignore_paths = [pathlib.Path(ig) for ig in args["--ignore"]]
