@@ -66,6 +66,11 @@ Module {
         prototype: "QStandardItemModel"
         exports: ["target/SignalsAndProperties 1.0"]
         exportMetaObjectRevisions: [256]
+        Enum {
+            name: "Flags"
+            type: "ushort"
+            values: ["YES", "NO", "MAYBE"]
+        }
         Property {
             name: "anon"
             type: "Anonymous"
@@ -126,6 +131,21 @@ Module {
         isCreatable: false
         isSingleton: true
         exportMetaObjectRevisions: [256]
+        Property {
+            name: "norm"
+            type: "Named2"
+            isPointer: true
+            read: "getNorm"
+            write: "setNorm"
+            notify: "normChanged"
+            index: 1
+        }
+        Signal {
+            name: "normChanged"
+            Parameter { type: "Named2"; isPointer: true }
+            Parameter { type: "int" }
+            Parameter { type: "bool" }
+        }
     }
     Component {
         file: "tests/target/clses.py"

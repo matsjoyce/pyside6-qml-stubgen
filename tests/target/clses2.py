@@ -25,7 +25,15 @@ QtQml.qmlRegisterSingletonType(Singleton2, "target", 1, 0, "Singleton2")
 
 
 class Singleton3(QtCore.QObject):
-    ...
+    normChanged = QtCore.Signal(Named2, int, bool, name="normChanged")
+
+    def getNorm(self) -> Named2:
+        ...
+
+    def setNorm(self, n: Named2) -> None:
+        ...
+
+    norm = QtCore.Property(Named2, getNorm, setNorm, notify=normChanged)
 
 
 QtQml.qmlRegisterSingletonInstance(

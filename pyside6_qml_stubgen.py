@@ -232,6 +232,23 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
 
 def patch_meta_system(info: ExtraCollectedInfo) -> None:
     @patch_with(QtCore)
+    def ClassInfo(
+        *args: typing.Mapping[str, str], old_fn: typing.Callable, **kwargs: str
+    ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        print(args, kwargs)
+
+        def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            for arg in args:
+                for n, k in arg.items():
+                    info.extra_class_infos[cls].append((n, k))
+            for n, k in kwargs.items():
+                info.extra_class_infos[cls].append((n, k))
+
+            return cls
+
+        return w
+
+    @patch_with(QtCore)
     def Property(
         type: type | str,
         *args: typing.Any,
@@ -475,7 +492,7 @@ def process(
     metatypes_dir: pathlib.Path | None,
     qmltyperegistrar_path: pathlib.Path | None,
     *,
-    file_relative_path: pathlib.Path | None = pathlib.Path(__file__).parent,
+    file_relative_path: pathlib.Path | None = None,
 ) -> None:
     if metatypes_dir is None:
         metatypes_dir = detect_metatypes_dir()

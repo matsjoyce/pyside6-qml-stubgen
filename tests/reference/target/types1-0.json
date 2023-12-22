@@ -152,11 +152,31 @@
                 ],
                 "classInfos": [
                     {
+                        "name": "D-Bus Interface",
+                        "value": "/org/thing/stuff"
+                    },
+                    {
+                        "name": "BigProblem",
+                        "value": "YES"
+                    },
+                    {
                         "name": "QML.Element",
                         "value": "auto"
                     }
                 ],
-                "enums": [],
+                "enums": [
+                    {
+                        "isClass": true,
+                        "isFlag": false,
+                        "name": "Flags",
+                        "type": "quint16",
+                        "values": [
+                            "YES",
+                            "NO",
+                            "MAYBE"
+                        ]
+                    }
+                ],
                 "properties": [
                     {
                         "name": "anon",
@@ -336,8 +356,37 @@
                     }
                 ],
                 "enums": [],
-                "properties": [],
-                "signals": [],
+                "properties": [
+                    {
+                        "name": "norm",
+                        "type": "Named2*",
+                        "index": 1,
+                        "notify": "normChanged",
+                        "read": "getNorm",
+                        "write": "setNorm"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "normChanged",
+                        "arguments": [
+                            {
+                                "name": "",
+                                "type": "Named2*"
+                            },
+                            {
+                                "name": "",
+                                "type": "int"
+                            },
+                            {
+                                "name": "",
+                                "type": "bool"
+                            }
+                        ],
+                        "returnType": "void"
+                    }
+                ],
                 "slots": []
             }
         ],
@@ -348,7 +397,9 @@
             "QtCore",
             "QtQml"
         ],
-        "PY_MODULES": [],
+        "PY_MODULES": [
+            "target 1.0"
+        ],
         "inputFile": "tests/target/clses2.py"
     },
     {

@@ -1,3 +1,5 @@
+import enum
+
 from PySide6 import QtCore, QtGui, QtQml
 
 QML_IMPORT_NAME = "target"
@@ -38,7 +40,15 @@ class Singleton(QtCore.QObject):
 
 
 @QtQml.QmlElement
+@QtCore.ClassInfo(BigProblem="YES")
+@QtCore.ClassInfo({"D-Bus Interface": "/org/thing/stuff"})
 class SignalsAndProperties(QtGui.QStandardItemModel):
+    @QtCore.QEnum
+    class Flags(enum.Enum):
+        YES = 0
+        NO = 1
+        MAYBE = 2
+
     @QtCore.Property(Anonymous, constant=True)
     def anon(self) -> Anonymous:
         ...
