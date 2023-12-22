@@ -1,0 +1,45 @@
+[
+    {
+        "classes": [
+            {
+                "className": "Obj",
+                "qualifiedClassName": "Obj",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "name": "anon",
+                        "type": "Anonymous*",
+                        "index": 1,
+                        "read": "anon"
+                    }
+                ],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 2,
+        "QML_IMPORT_MINOR_VERSION": 1,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [
+            "target 1.0"
+        ],
+        "inputFile": "tests/target/submodule.py"
+    }
+]

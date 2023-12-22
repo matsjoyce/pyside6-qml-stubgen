@@ -17,7 +17,6 @@ import inspect
 import itertools
 import json
 import pathlib
-import shlex
 import shutil
 import subprocess
 import sys
@@ -39,8 +38,8 @@ class ExtraCollectedInfo:
         typing.Callable, tuple[tuple[type | str, ...], type | str | None]
     ] = dataclasses.field(default_factory=dict)
     registered_classes: typing.DefaultDict[
-        tuple[str, int, int], list[type[QtCore.QObject]]
-    ] = dataclasses.field(default_factory=lambda: collections.defaultdict(list))
+        tuple[str, int, int], set[type[QtCore.QObject]]
+    ] = dataclasses.field(default_factory=lambda: collections.defaultdict(set))
 
 
 def patch_with(mod: types.ModuleType) -> typing.Callable[[typing.Callable], None]:
@@ -61,10 +60,12 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         version_minor: int,
         qml_name: str,
         callback: object,
+        *,
+        old_fn: typing.Callable,
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].append(type_obj)
+        info.registered_classes[uri, version_major, version_minor].add(type_obj)
 
     @patch_with(QtQml)
     def qmlRegisterSingletonType(
@@ -74,10 +75,12 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         version_minor: int,
         qml_name: str,
         callback: object = None,
+        *,
+        old_fn: typing.Callable,
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].append(type_obj)
+        info.registered_classes[uri, version_major, version_minor].add(type_obj)
 
     @patch_with(QtQml)
     def qmlRegisterType(
@@ -86,9 +89,11 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         version_major: int,
         version_minor: int,
         qml_name: str,
+        *,
+        old_fn: typing.Callable,
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].append(type_obj)
+        info.registered_classes[uri, version_major, version_minor].add(type_obj)
 
     @patch_with(QtQml)
     def qmlRegisterUncreatableMetaObject(
@@ -98,6 +103,8 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         versionMinor: int,
         qmlName: str,
         reason: str,
+        *,
+        old_fn: typing.Callable,
     ) -> None:
         raise RuntimeError("qmlRegisterUncreatableMetaObject not supported yet")
 
@@ -109,19 +116,23 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         version_minor: int,
         qml_name: str,
         message: str,
+        *,
+        old_fn: typing.Callable,
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Creatable", "false"))
         info.extra_class_infos[type_obj].append(("QML.UncreatableReason", message))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].append(type_obj)
+        info.registered_classes[uri, version_major, version_minor].add(type_obj)
 
 
 def patch_class_decorators(info: ExtraCollectedInfo) -> None:
-    def go_up(frame: types.FrameType | None) -> types.FrameType | None:
-        return frame.f_back if frame else None
+    def go_up(frame: types.FrameType | None, levels: int) -> types.FrameType | None:
+        if levels == 0:
+            return frame
+        return go_up(frame.f_back, levels - 1) if frame else None
 
-    def get_module() -> tuple[str, int, int]:
-        frame = go_up(go_up(go_up(inspect.currentframe())))
+    def get_module(stack_levels: int = 3) -> tuple[str, int, int]:
+        frame = go_up(inspect.currentframe(), stack_levels)
         assert frame is not None, "No caller frame"
         glob = frame.f_globals
         name = glob["QML_IMPORT_NAME"]
@@ -131,32 +142,34 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
 
     @patch_with(QtQml)
     def QmlSingleton(
-        cls: type[T_TypeQObject], old_fn: typing.Callable
+        cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Singleton", "true"))
         return cls
 
     @patch_with(QtQml)
     def QmlElement(
-        cls: type[T_TypeQObject], old_fn: typing.Callable
+        cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "auto"))
-        info.registered_classes[get_module()].append(cls)
+        info.registered_classes[get_module()].add(cls)
         return cls
 
     @patch_with(QtQml)
     def QmlAnonymous(
-        cls: type[T_TypeQObject], old_fn: typing.Callable
+        cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "anonymous"))
-        info.registered_classes[get_module()].append(cls)
+        info.registered_classes[get_module()].add(cls)
         return cls
 
     @patch_with(QtQml)
-    def QmlNamedElement(name: str, old_fn: typing.Callable) -> type[T_TypeQObject]:
+    def QmlNamedElement(
+        name: str, *, old_fn: typing.Callable
+    ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
             info.extra_class_infos[cls].append(("QML.Element", name))
-            info.registered_classes[get_module()].append(cls)
+            info.registered_classes[get_module(stack_levels=2)].add(cls)
             return cls
 
         return w
@@ -176,33 +189,42 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
 
     @patch_with(QtQml)
     def QmlForeign(
-        type: type, *, old_fn: typing.Callable
+        type_obj: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        info.registered_classes[get_module()].add(type_obj)
+
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
-            # XXX Not sure if it should be the class name, or something similar
-            info.extra_class_infos[cls].append(("QML.Foreign", type.__name__))
+            info.extra_class_infos[cls].append(
+                ("QML.Foreign", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
+            )
             return cls
 
         return w
 
     @patch_with(QtQml)
     def QmlExtended(
-        type: type, *, old_fn: typing.Callable
+        type_obj: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        info.registered_classes[get_module()].add(type_obj)
+
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
-            # XXX Not sure if it should be the class name, or something similar
-            info.extra_class_infos[cls].append(("QML.Extended", type.__name__))
+            info.extra_class_infos[cls].append(
+                ("QML.Extended", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
+            )
             return cls
 
         return w
 
     @patch_with(QtQml)
     def QmlAttached(
-        type: type, *, old_fn: typing.Callable
+        type_obj: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
+        info.registered_classes[get_module()].add(type_obj)
+
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
-            # XXX Not sure if it should be the class name, or something similar
-            info.extra_class_infos[cls].append(("QML.Attached", type.__name__))
+            info.extra_class_infos[cls].append(
+                ("QML.Attached", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
+            )
             return cls
 
         return w
@@ -267,18 +289,22 @@ def parse_module(
     uri: str,
     major: int,
     minor: int,
-    clses: typing.Sequence[type[QtCore.QObject]],
+    clses: set[type[QtCore.QObject]],
     extra_info: ExtraCollectedInfo,
+    file_relative_path: pathlib.Path | None,
 ) -> typing.Sequence[typing.Mapping]:
     ret = []
-    for cls in clses:
+    for cls in sorted(clses, key=lambda c: c.__name__):
         depends_on: set[str] = set()
+        input_file = pathlib.Path(sys.modules[cls.__module__].__file__ or "")
+        if file_relative_path is not None:
+            input_file = input_file.relative_to(file_relative_path)
         ret.append(
             {
                 "classes": [parse_class(cls, depends_on, extra_info)],
                 "outputRevision": 68,
-                "QML_IMPORT_MAJOR_VERSION": 1,
-                "QML_IMPORT_MINOR_VERSION": 0,
+                "QML_IMPORT_MAJOR_VERSION": major,
+                "QML_IMPORT_MINOR_VERSION": minor,
                 "QT_MODULES": [
                     m.__name__.removeprefix("PySide6.")
                     for m in sys.modules[cls.__module__].__dict__.values()
@@ -286,7 +312,7 @@ def parse_module(
                     and m.__name__.startswith("PySide6.")
                 ],
                 "PY_MODULES": list(depends_on),
-                "inputFile": sys.modules[cls.__module__].__file__,
+                "inputFile": str(input_file),
             }
         )
     return ret
@@ -351,8 +377,11 @@ def resolve_type_name(
     extra_info: ExtraCollectedInfo,
 ) -> str:
     if isinstance(py_type, type) and py_type in extra_info.extra_class_infos:
-        depends_on.add(py_type.__module__)
-        return f"{py_type.__name__}*"
+        for (uri, major, minor), clses in extra_info.registered_classes.items():
+            if py_type in clses:
+                depends_on.add(f"{uri} {major}.{minor}")
+                break
+        return f"{py_type.staticMetaObject.className()}*"  # type: ignore[attr-defined]
     else:
         return qt_name
 
@@ -392,7 +421,7 @@ def parse_method(
     try:
         param_names: typing.Iterable[str] = list(inspect.signature(m).parameters)[1:]
     except ValueError:
-        param_names = itertools.cycle("")
+        param_names = itertools.cycle([""])
     return {
         "access": "public",
         "name": meth.name().data().decode(),
@@ -409,46 +438,44 @@ def parse_method(
     }
 
 
-def main() -> None:
-    args = docopt.docopt(__doc__)
+def process(
+    in_dir: pathlib.Path,
+    ignore_dirs: typing.Sequence[pathlib.Path],
+    out_dir: pathlib.Path,
+    metatypes_dir: pathlib.Path,
+    qmltyperegistrar_path: pathlib.Path,
+    *,
+    file_relative_path: pathlib.Path | None = None,
+) -> None:
     extra_info = patches()
 
-    out_dir = pathlib.Path(args["--out-dir"])
     if out_dir.exists():
         shutil.rmtree(out_dir)
     out_dir.mkdir()
     (out_dir / "README").write_text(
-        f"QML type stubs generated automatically using\n{shlex.join(sys.argv)}"
+        f"""QML type stubs generated automatically using
+pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i in ignore_dirs)} --metatypes-dir {metatypes_dir} --qmltyperegistrar-path {qmltyperegistrar_path}"""
     )
 
-    in_dir = pathlib.Path(args["<in-dir>"])
-    ignore_paths = [pathlib.Path(ig) for ig in args["--ignore"]]
-
-    foreign_types = list(pathlib.Path(args["--metatypes-dir"]).glob("*_metatypes.json"))
+    foreign_types = list(metatypes_dir.glob("*_metatypes.json"))
     type_dirs = []
 
     sys.path.append(".")
 
+    print("Importing Python modules")
     for fname in in_dir.rglob("*.py"):
-        if any(ig in fname.parents for ig in ignore_paths):
+        if any(ig in fname.parents for ig in ignore_dirs):
             continue
         module = ".".join(
             [x.name for x in fname.parents if x.name][::-1] + [fname.stem]
         )
-        print("Importing Python module", module)
+        print(f" -> {module}")
         importlib.import_module(module)
 
+    print("Processing types declared for QML modules")
     for (uri, major, minor), clses in extra_info.registered_classes.items():
-        print(
-            "Processing types declared for QML module",
-            uri,
-            major,
-            minor,
-            "which contains",
-            len(clses),
-            "classes",
-        )
-        data = parse_module(uri, major, minor, clses, extra_info)
+        print(f" -> {uri} {major}.{minor} (contains {len(clses)} classes)")
+        data = parse_module(uri, major, minor, clses, extra_info, file_relative_path)
 
         out_path = out_dir / uri.replace(".", "/")
         out_path.mkdir(parents=True, exist_ok=True)
@@ -459,11 +486,12 @@ def main() -> None:
 
     qmldir_entries = collections.defaultdict(set)
 
+    print("Generating QML type info for QML modules")
     for uri, major, minor, out_path, data in type_dirs:
-        print("Generating QML type info for QML module", uri, major, minor)
+        print(f" -> {uri} {major}.{minor}")
         subprocess.run(
             [
-                args["--qmltyperegistrar-path"],
+                qmltyperegistrar_path,
                 out_path / f"types{major}-{minor}.json",
                 "-o",
                 out_path / f"qmltyperegistrations{major}-{minor}.cpp",
@@ -479,18 +507,30 @@ def main() -> None:
                 ",".join(map(str, foreign_types)),
             ]
         )
-        qmldir_entries[out_path].add(f"typeinfo types{major}-{minor}.qmltypes\n")
+        qmldir_entries[out_path, uri].add(f"typeinfo types{major}-{minor}.qmltypes\n")
         for n in set(
             itertools.chain.from_iterable(
                 [d["QT_MODULES"] + d["PY_MODULES"] for d in data]
             )
         ):
-            qmldir_entries[out_path].add(f"depends {n}\n")
-    for out_path, lines in qmldir_entries.items():
+            qmldir_entries[out_path, uri].add(f"depends {n}\n")
+
+    for (out_path, uri), lines in qmldir_entries.items():
         with (out_path / "qmldir").open("w") as f:
-            f.write(f"module {module}\n")
-            for line in lines:
+            f.write(f"module {uri}\n")
+            for line in sorted(lines):
                 f.write(line)
+
+
+def main() -> None:
+    args = docopt.docopt(__doc__)
+    process(
+        in_dir=pathlib.Path(args["<in-dir>"]),
+        ignore_dirs=[pathlib.Path(ig) for ig in args["--ignore"]],
+        out_dir=pathlib.Path(args["--out-dir"]),
+        metatypes_dir=pathlib.Path(args["--metatypes-dir"]),
+        qmltyperegistrar_path=pathlib.Path(args["--qmltyperegistrar-path"]),
+    )
 
 
 if __name__ == "__main__":

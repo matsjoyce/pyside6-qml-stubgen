@@ -1,0 +1,2 @@
+QML type stubs generated automatically using
+pyside6-qml-stubgen tests/target --out-dir tests/reference  --metatypes-dir /usr/lib/qt6/metatypes --qmltyperegistrar-path /usr/lib/qt6/qmltyperegistrar
