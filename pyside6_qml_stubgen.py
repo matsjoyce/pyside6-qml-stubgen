@@ -329,7 +329,7 @@ def parse_module(
                     and m.__name__.startswith("PySide6.")
                 ],
                 "PY_MODULES": list(depends_on),
-                "inputFile": str(input_file),
+                "inputFile": input_file.as_posix(),
             }
         )
     return ret
@@ -456,13 +456,13 @@ def parse_method(
 
 
 def detect_metatypes_dir() -> pathlib.Path:
-    bundled_dir = pathlib.Path(QtCore.__file__).parent / "Qt" / "metatypes"
-    if bundled_dir.is_dir():
-        return bundled_dir
-
-    sys_dir = pathlib.Path("/usr/lib/qt6/metatypes")
-    if sys_dir.is_dir():
-        return sys_dir
+    for option in [
+        pathlib.Path(QtCore.__file__).parent / "Qt" / "metatypes",
+        pathlib.Path(QtCore.__file__).parent / "metatypes",
+        pathlib.Path("/usr/lib/qt6/metatypes"),
+    ]:
+        if option.is_dir():
+            return option
 
     raise RuntimeError(
         "Could not find metatypes dir. Provide it manually using the --metatypes-dir option"
@@ -470,15 +470,13 @@ def detect_metatypes_dir() -> pathlib.Path:
 
 
 def detect_qmltyperegistrar_path() -> pathlib.Path:
-    bundled_path = (
-        pathlib.Path(QtCore.__file__).parent / "Qt" / "libexec" / "qmltyperegistrar"
-    )
-    if bundled_path.is_file():
-        return bundled_path
-
-    sys_path = pathlib.Path("/usr/lib/qt6/qmltyperegistrar")
-    if sys_path.is_file():
-        return sys_path
+    for option in [
+        pathlib.Path(QtCore.__file__).parent / "Qt" / "libexec" / "qmltyperegistrar",
+        pathlib.Path(QtCore.__file__).parent / "qmltyperegistrar.exe",
+        pathlib.Path("/usr/lib/qt6/qmltyperegistrar"),
+    ]:
+        if option.is_file():
+            return option
 
     raise RuntimeError(
         "Could not find qmltyperegistrar. Provide it manually using the --qmltyperegistrar-path option"

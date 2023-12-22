@@ -1,4 +1,4 @@
-import filecmp
+import os
 import pathlib
 
 import pyside6_qml_stubgen
@@ -30,12 +30,7 @@ def test_run_and_compare(tmp_path: pathlib.Path) -> None:
 
     assert left == right
 
-    match, mismatch, errors = filecmp.cmpfiles(
-        REFERENCE_DIR,
-        tmp_path,
-        left,
-        shallow=False,
-    )
-
-    assert mismatch == []
-    assert errors == []
+    for f in left:
+        left_text = (REFERENCE_DIR / f).read_text()
+        right_text = (tmp_path / f).read_text().replace(os.sep, "/")
+        assert left_text == right_text
