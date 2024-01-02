@@ -40,6 +40,15 @@ class ExtraCollectedInfo:
     registered_classes: typing.DefaultDict[
         tuple[str, int, int], set[type[QtCore.QObject]]
     ] = dataclasses.field(default_factory=lambda: collections.defaultdict(set))
+    delayed_registrations: typing.DefaultDict[
+        type[QtCore.QObject], set[type[QtCore.QObject]]
+    ] = dataclasses.field(default_factory=lambda: collections.defaultdict(set))
+
+    def resolve_delayed(self) -> None:
+        for cls, linked_clses in self.delayed_registrations.items():
+            module = [k for k, v in self.registered_classes.items() if cls in v][0]
+            self.registered_classes[module].update(linked_clses)
+        self.delayed_registrations.clear()
 
 
 def patch_with(mod: types.ModuleType) -> typing.Callable[[typing.Callable], None]:
@@ -191,9 +200,13 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     def QmlForeign(
         type_obj: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
-        info.registered_classes[get_module()].add(type_obj)
-
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            try:
+                module = get_module(stack_levels=4)
+            except KeyError:
+                info.delayed_registrations[cls].add(type_obj)
+            else:
+                info.registered_classes[module].add(type_obj)
             info.extra_class_infos[cls].append(
                 ("QML.Foreign", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -205,9 +218,13 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     def QmlExtended(
         type_obj: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
-        info.registered_classes[get_module()].add(type_obj)
-
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            try:
+                module = get_module(stack_levels=4)
+            except KeyError:
+                info.delayed_registrations[cls].add(type_obj)
+            else:
+                info.registered_classes[module].add(type_obj)
             info.extra_class_infos[cls].append(
                 ("QML.Extended", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -219,9 +236,13 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     def QmlAttached(
         type_obj: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
-        info.registered_classes[get_module()].add(type_obj)
-
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
+            try:
+                module = get_module(stack_levels=4)
+            except KeyError:
+                info.delayed_registrations[cls].add(type_obj)
+            else:
+                info.registered_classes[module].add(type_obj)
             info.extra_class_infos[cls].append(
                 ("QML.Attached", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -235,8 +256,6 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
     def ClassInfo(
         *args: typing.Mapping[str, str], old_fn: typing.Callable, **kwargs: str
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
-        print(args, kwargs)
-
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
             for arg in args:
                 for n, k in arg.items():
@@ -519,8 +538,12 @@ pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i
         module = ".".join(
             [x.name for x in fname.parents if x.name][::-1] + [fname.stem]
         )
+        if module.endswith(".__init__"):
+            module = module.removesuffix(".__init__")
         print(f" -> {module}")
         importlib.import_module(module)
+
+    extra_info.resolve_delayed()
 
     print("Processing types declared for QML modules")
     for (uri, major, minor), clses in extra_info.registered_classes.items():
@@ -555,7 +578,8 @@ pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i
                 str(minor),
                 "--foreign-types",
                 ",".join(map(str, foreign_types)),
-            ]
+            ],
+            check=True,
         )
         qmldir_entries[out_path, uri].add(f"typeinfo types{major}-{minor}.qmltypes\n")
         for n in set(
