@@ -44,10 +44,32 @@ class ExtraCollectedInfo:
         type[QtCore.QObject], set[type[QtCore.QObject]]
     ] = dataclasses.field(default_factory=lambda: collections.defaultdict(set))
 
+    def lookup_cls_module(self, cls: type[QtCore.QObject]) -> typing.Optional[str]:
+        for (uri, major, minor), clses in self.registered_classes.items():
+            if cls in clses:
+                return f"{uri} {major}.{minor}"
+        return None
+
+    def add_cls(
+        self,
+        uri: str,
+        version_major: int,
+        version_minor: int,
+        type_obj: type[QtCore.QObject],
+    ) -> None:
+        self.registered_classes[uri, version_major, version_minor].add(type_obj)
+        for base_cls in type_obj.__mro__:
+            if isinstance(base_cls, type) and issubclass(base_cls, QtCore.QObject):
+                self.delayed_registrations[type_obj].add(base_cls)
+
     def resolve_delayed(self) -> None:
         for cls, linked_clses in self.delayed_registrations.items():
             module = [k for k, v in self.registered_classes.items() if cls in v][0]
-            self.registered_classes[module].update(linked_clses)
+            for linked_cls in linked_clses:
+                if self.lookup_cls_module(
+                    linked_cls
+                ) is None and not linked_cls.__module__.startswith("PySide6"):
+                    self.registered_classes[module].add(linked_cls)
         self.delayed_registrations.clear()
 
 
@@ -74,7 +96,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].add(type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj)
 
     @patch_with(QtQml)
     def qmlRegisterSingletonType(
@@ -89,7 +111,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].add(type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj)
 
     @patch_with(QtQml)
     def qmlRegisterType(
@@ -102,7 +124,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         old_fn: typing.Callable,
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].add(type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj)
 
     @patch_with(QtQml)
     def qmlRegisterUncreatableMetaObject(
@@ -131,7 +153,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         info.extra_class_infos[type_obj].append(("QML.Creatable", "false"))
         info.extra_class_infos[type_obj].append(("QML.UncreatableReason", message))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.registered_classes[uri, version_major, version_minor].add(type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj)
 
 
 def patch_class_decorators(info: ExtraCollectedInfo) -> None:
@@ -161,7 +183,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
         cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "auto"))
-        info.registered_classes[get_module()].add(cls)
+        info.add_cls(*get_module(), cls)
         return cls
 
     @patch_with(QtQml)
@@ -169,7 +191,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
         cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "anonymous"))
-        info.registered_classes[get_module()].add(cls)
+        info.add_cls(*get_module(), cls)
         return cls
 
     @patch_with(QtQml)
@@ -178,7 +200,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
             info.extra_class_infos[cls].append(("QML.Element", name))
-            info.registered_classes[get_module(stack_levels=2)].add(cls)
+            info.add_cls(*get_module(stack_levels=2), cls)
             return cls
 
         return w
@@ -206,7 +228,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             except KeyError:
                 info.delayed_registrations[cls].add(type_obj)
             else:
-                info.registered_classes[module].add(type_obj)
+                info.add_cls(*module, cls)
             info.extra_class_infos[cls].append(
                 ("QML.Foreign", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -224,7 +246,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             except KeyError:
                 info.delayed_registrations[cls].add(type_obj)
             else:
-                info.registered_classes[module].add(type_obj)
+                info.add_cls(*module, cls)
             info.extra_class_infos[cls].append(
                 ("QML.Extended", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -242,7 +264,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             except KeyError:
                 info.delayed_registrations[cls].add(type_obj)
             else:
-                info.registered_classes[module].add(type_obj)
+                info.add_cls(*module, cls)
             info.extra_class_infos[cls].append(
                 ("QML.Attached", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -359,6 +381,10 @@ def parse_class(
 ) -> typing.Mapping:
     meta = cls.staticMetaObject  # type: ignore[attr-defined]
 
+    for base_cls in cls.__bases__:
+        if module := extra_info.lookup_cls_module(base_cls):
+            depends_on.add(module)
+
     return {
         "className": meta.className(),
         "qualifiedClassName": cls.__qualname__,
@@ -412,11 +438,9 @@ def resolve_type_name(
     depends_on: set[str],
     extra_info: ExtraCollectedInfo,
 ) -> str:
-    if isinstance(py_type, type) and py_type in extra_info.extra_class_infos:
-        for (uri, major, minor), clses in extra_info.registered_classes.items():
-            if py_type in clses:
-                depends_on.add(f"{uri} {major}.{minor}")
-                break
+    if isinstance(py_type, type) and issubclass(py_type, QtCore.QObject):
+        if module := extra_info.lookup_cls_module(py_type):
+            depends_on.add(module)
         return f"{py_type.staticMetaObject.className()}*"  # type: ignore[attr-defined]
     else:
         return qt_name
