@@ -1,0 +1,181 @@
+[
+    {
+        "classes": [
+            {
+                "className": "Layout2",
+                "qualifiedClassName": "Layout2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Attached",
+                        "value": "LayoutAttached2"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "Layout2"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 100,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "tests/target/advanced2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "LayoutAttached2",
+                "qualifiedClassName": "LayoutAttached2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "LayoutAttached2"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "name": "margins",
+                        "type": "QMargins",
+                        "index": 1,
+                        "read": "margins"
+                    }
+                ],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 100,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "tests/target/advanced2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "LineEditor2",
+                "qualifiedClassName": "LineEditor2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 100,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "tests/target/advanced2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "LineEditorExtension2",
+                "qualifiedClassName": "LineEditorExtension2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 100,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "tests/target/advanced2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "LineEditorForeign2",
+                "qualifiedClassName": "LineEditorForeign2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Foreign",
+                        "value": "LineEditor2"
+                    },
+                    {
+                        "name": "QML.Extended",
+                        "value": "LineEditorExtension2"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "LineEditor2"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 100,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "tests/target/advanced2.py"
+    }
+]
