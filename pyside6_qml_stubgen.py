@@ -24,6 +24,7 @@ import types
 import typing
 
 import docopt
+import typing_extensions
 from PySide6 import QtCore, QtQml
 
 T_TypeQObject = typing.TypeVar("T_TypeQObject", bound=QtCore.QObject)
@@ -35,7 +36,7 @@ class ExtraCollectedInfo:
         type[QtCore.QObject], list[tuple[str, str]]
     ] = dataclasses.field(default_factory=lambda: collections.defaultdict(list))
     signal_types: dict[
-        typing.Callable, tuple[tuple[type | str, ...], type | str | None]
+        QtCore.Signal, tuple[tuple[type | str, ...], type | str | None]
     ] = dataclasses.field(default_factory=dict)
     registered_classes: typing.DefaultDict[
         tuple[str, int, int], set[type[QtCore.QObject]]
@@ -318,19 +319,27 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
         slot = old_fn(*types, **kwargs)
 
         def w(f: typing.Callable) -> typing.Callable:
-            info.signal_types[f] = (types, result)
+            info.signal_types[f] = (types, result)  # type: ignore[index]
             return slot(f)
 
         return w
 
-    @patch_with(QtCore)
-    def Signal(
-        *types: type | str, old_fn: typing.Callable, **kwargs: typing.Any
-    ) -> QtCore.Signal:
-        sig = old_fn(*types, **kwargs)
-        info.signal_types[sig] = (types, None)
+    QtSignal = QtCore.Signal
 
-        return sig
+    class SignalMeta(type):
+        def __subclasscheck__(self, subclass: type) -> bool:
+            return issubclass(subclass, QtSignal)
+
+        def __call__(self, *types: type | str, **kwargs: typing.Any) -> QtCore.Signal:
+            sig = QtSignal(*types, **kwargs)  # type: ignore[arg-type]
+            info.signal_types[sig] = (types, None)
+
+            return sig
+
+    class Signal(metaclass=SignalMeta):
+        pass
+
+    QtCore.Signal = Signal  # type: ignore[assignment,misc]
 
 
 def patches() -> ExtraCollectedInfo:
@@ -344,7 +353,6 @@ def patches() -> ExtraCollectedInfo:
 
 
 def parse_module(
-    uri: str,
     major: int,
     minor: int,
     clses: set[type[QtCore.QObject]],
@@ -462,7 +470,7 @@ def parse_property(
         "index": prop.propertyIndex(),
     }
     if prop.hasNotifySignal():
-        ret["notify"] = prop.notifySignal().name().data().decode()
+        ret["notify"] = bytes(prop.notifySignal().name().data()).decode()
     if prop.isReadable() and p.fget:
         ret["read"] = p.fget.__name__
     if prop.isWritable() and p.fset:
@@ -476,7 +484,7 @@ def parse_method(
     depends_on: set[str],
     extra_info: ExtraCollectedInfo,
 ) -> typing.Mapping:
-    m = getattr(cls, meth.name().data().decode())
+    m = getattr(cls, bytes(meth.name().data()).decode())
     ts = extra_info.signal_types[m]
     try:
         param_names: typing.Iterable[str] = list(inspect.signature(m).parameters)[1:]
@@ -484,12 +492,15 @@ def parse_method(
         param_names = itertools.cycle([""])
     return {
         "access": "public",
-        "name": meth.name().data().decode(),
+        "name": bytes(meth.name().data()).decode(),
         "arguments": [
             {
-                "name": meth.parameterNames()[i].data().decode() or n,
+                "name": bytes(meth.parameterNames()[i].data()).decode() or n,
                 "type": resolve_type_name(
-                    meth.parameterTypeName(i).data().decode(), t, depends_on, extra_info
+                    bytes(meth.parameterTypeName(i).data()).decode(),
+                    t,
+                    depends_on,
+                    extra_info,
                 ),
             }
             for i, t, n in zip(range(meth.parameterCount()), ts[0], param_names)
@@ -572,7 +583,7 @@ pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i
     print("Processing types declared for QML modules")
     for (uri, major, minor), clses in extra_info.registered_classes.items():
         print(f" -> {uri} {major}.{minor} (contains {len(clses)} classes)")
-        data = parse_module(uri, major, minor, clses, extra_info, file_relative_path)
+        data = parse_module(major, minor, clses, extra_info, file_relative_path)
 
         out_path = out_dir / uri.replace(".", "/")
         out_path.mkdir(parents=True, exist_ok=True)

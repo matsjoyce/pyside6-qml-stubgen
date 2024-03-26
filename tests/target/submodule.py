@@ -10,5 +10,4 @@ QML_IMPORT_MINOR_VERSION = 1
 @QtQml.QmlElement
 class Obj(QtCore.QObject):
     @QtCore.Property(clses.Anonymous, constant=True)
-    def anon(self) -> clses.Anonymous:
-        ...
+    def anon(self) -> clses.Anonymous: ...
