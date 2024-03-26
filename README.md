@@ -6,7 +6,13 @@ Generate QML stub files (`.qmltypes`) from Python modules (which use PySide6)
 Installation
 ------------
 
-This tool is not yet distributed though pip, so instead clone the repo and then install using pip:
+This tool can be installed though PyPI:
+
+```bash
+pip install pyside6-qml-stubgen
+```
+
+If you want to use a development version, instead clone the repo and then install using pip:
 
 ```bash
 git clone https://github.com/matsjoyce/pyside6-qml-stubgen.git

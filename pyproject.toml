@@ -1,6 +1,5 @@
 [project]
 name = "pyside6-qml-stubgen"
-version = "0.1.0"
 description = "Generate QML stub files (.qmltypes) from Python modules (which use PySide6)"
 authors = [
     {name = "Matthew Joyce"},
@@ -24,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/matsjoyce/pyside6-qml-stubgen"
@@ -38,9 +38,14 @@ dev = [
     "pytest",
     "mypy",
     "black",
-    "types-docopt"
+    "types-docopt",
+    "build",
+    "pytest-cov"
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
