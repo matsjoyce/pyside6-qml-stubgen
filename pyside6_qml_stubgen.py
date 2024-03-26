@@ -470,7 +470,7 @@ def parse_property(
         "index": prop.propertyIndex(),
     }
     if prop.hasNotifySignal():
-        ret["notify"] = prop.notifySignal().name().data().decode()
+        ret["notify"] = bytes(prop.notifySignal().name().data()).decode()
     if prop.isReadable() and p.fget:
         ret["read"] = p.fget.__name__
     if prop.isWritable() and p.fset:
@@ -484,7 +484,7 @@ def parse_method(
     depends_on: set[str],
     extra_info: ExtraCollectedInfo,
 ) -> typing.Mapping:
-    m = getattr(cls, meth.name().data().decode())
+    m = getattr(cls, bytes(meth.name().data()).decode())
     ts = extra_info.signal_types[m]
     try:
         param_names: typing.Iterable[str] = list(inspect.signature(m).parameters)[1:]
@@ -492,12 +492,15 @@ def parse_method(
         param_names = itertools.cycle([""])
     return {
         "access": "public",
-        "name": meth.name().data().decode(),
+        "name": bytes(meth.name().data()).decode(),
         "arguments": [
             {
-                "name": meth.parameterNames()[i].data().decode() or n,
+                "name": bytes(meth.parameterNames()[i].data()).decode() or n,
                 "type": resolve_type_name(
-                    meth.parameterTypeName(i).data().decode(), t, depends_on, extra_info
+                    bytes(meth.parameterTypeName(i).data()).decode(),
+                    t,
+                    depends_on,
+                    extra_info,
                 ),
             }
             for i, t, n in zip(range(meth.parameterCount()), ts[0], param_names)
