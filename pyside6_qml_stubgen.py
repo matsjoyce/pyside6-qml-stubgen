@@ -2,7 +2,7 @@
 Generate QML stub files (.qmltypes) from Python modules (which use PySide6)
 
 Usage:
-    pyside6-qml-stubgen <in-dir> --out-dir=<out-dir> [--ignore=<path>...] [--metatypes-dir=<dir>] [--qmltyperegistrar-path=<path>]
+    pyside6-qml-stubgen <in-dir>... --out-dir=<out-dir> [--ignore=<path>...] [--metatypes-dir=<dir>] [--qmltyperegistrar-path=<path>]
 
 Options:
     --ignore=<path>                     Ignore all Python files that are children of thispath
@@ -24,7 +24,6 @@ import types
 import typing
 
 import docopt
-import typing_extensions
 from PySide6 import QtCore, QtQml
 
 T_TypeQObject = typing.TypeVar("T_TypeQObject", bound=QtCore.QObject)
@@ -538,7 +537,7 @@ def detect_qmltyperegistrar_path() -> pathlib.Path:
 
 
 def process(
-    in_dir: pathlib.Path,
+    in_dirs: typing.Sequence[pathlib.Path],
     ignore_dirs: typing.Sequence[pathlib.Path],
     out_dir: pathlib.Path,
     metatypes_dir: pathlib.Path | None,
@@ -558,7 +557,7 @@ def process(
     out_dir.mkdir()
     (out_dir / "README").write_text(
         f"""QML type stubs generated automatically using
-pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i in ignore_dirs)} --metatypes-dir {metatypes_dir} --qmltyperegistrar-path {qmltyperegistrar_path}"""
+pyside6-qml-stubgen {' '.join(map(str, in_dirs))} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i in ignore_dirs)} --metatypes-dir {metatypes_dir} --qmltyperegistrar-path {qmltyperegistrar_path}"""
     )
 
     foreign_types = list(metatypes_dir.glob("*_metatypes.json"))
@@ -567,7 +566,9 @@ pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i
     sys.path.append(".")
 
     print("Importing Python modules")
-    for fname in in_dir.rglob("*.py"):
+    for fname in itertools.chain.from_iterable(
+        in_dir.rglob("*.py") for in_dir in in_dirs
+    ):
         if any(ig in fname.parents for ig in ignore_dirs):
             continue
         module = ".".join(
@@ -634,7 +635,7 @@ pyside6-qml-stubgen {in_dir} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i
 def main() -> None:
     args = docopt.docopt(__doc__)
     process(
-        in_dir=pathlib.Path(args["<in-dir>"]),
+        in_dirs=[pathlib.Path(p) for p in args["<in-dir>"]],
         ignore_dirs=[pathlib.Path(ig) for ig in args["--ignore"]],
         out_dir=pathlib.Path(args["--out-dir"]),
         metatypes_dir=(

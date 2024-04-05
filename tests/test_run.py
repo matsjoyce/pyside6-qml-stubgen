@@ -9,7 +9,7 @@ REFERENCE_DIR = pathlib.Path(__file__).parent / "reference"
 
 def test_run_and_compare(tmp_path: pathlib.Path) -> None:
     pyside6_qml_stubgen.process(
-        in_dir=TARGET_DIR.relative_to(pathlib.Path().resolve()),
+        in_dirs=[TARGET_DIR.relative_to(pathlib.Path().resolve())],
         ignore_dirs=[],
         out_dir=tmp_path,
         metatypes_dir=None,
