@@ -7,8 +7,8 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlmoduleregistration.h>
 
-#include <tests/target/clses.py>
-#include <tests/target/clses2.py>
+#include <in/clses.py>
+#include <in/clses2.py>
 
 
 #if !defined(QT_STATIC)

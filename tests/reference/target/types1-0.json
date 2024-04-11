@@ -32,7 +32,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -67,7 +67,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -101,7 +101,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses2.py"
+        "inputFile": "in/clses2.py"
     },
     {
         "classes": [
@@ -136,7 +136,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -254,7 +254,7 @@
         "PY_MODULES": [
             "target 1.0"
         ],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -293,7 +293,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -331,7 +331,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses2.py"
+        "inputFile": "in/clses2.py"
     },
     {
         "classes": [
@@ -400,7 +400,7 @@
         "PY_MODULES": [
             "target 1.0"
         ],
-        "inputFile": "tests/target/clses2.py"
+        "inputFile": "in/clses2.py"
     },
     {
         "classes": [
@@ -439,7 +439,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -482,7 +482,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses.py"
+        "inputFile": "in/clses.py"
     },
     {
         "classes": [
@@ -524,6 +524,6 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/clses2.py"
+        "inputFile": "in/clses2.py"
     }
 ]

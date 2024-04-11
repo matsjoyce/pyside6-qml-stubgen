@@ -24,9 +24,9 @@ class Property:
     name: str
     type: str
     index: int
-    notify: typing.Optional[str] = None
-    read: typing.Optional[str] = None
-    write: typing.Optional[str] = None
+    notify: str | None = None
+    read: str | None = None
+    write: str | None = None
 
 
 @dataclasses.dataclass(frozen=True)

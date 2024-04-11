@@ -1,36 +1,128 @@
+import collections
 import os
 import pathlib
+import re
+import shutil
+import subprocess
+import sys
 
-import pyside6_qml_stubgen
+import pytest
 
 TARGET_DIR = pathlib.Path(__file__).parent / "target"
 REFERENCE_DIR = pathlib.Path(__file__).parent / "reference"
 
+ROOT_PATH = pathlib.Path(__file__).parent.parent
 
-def test_run_and_compare(tmp_path: pathlib.Path) -> None:
-    pyside6_qml_stubgen.process(
-        in_dirs=[TARGET_DIR.relative_to(pathlib.Path().resolve())],
-        ignore_dirs=[],
-        out_dir=tmp_path,
-        metatypes_dir=None,
-        qmltyperegistrar_path=None,
-        file_relative_path=TARGET_DIR.parent.parent,
+
+def assert_dirs_equal(reference: pathlib.Path, result: pathlib.Path) -> None:
+    ref_files = sorted(
+        str(f.relative_to(reference))
+        for f in reference.rglob("*")
+        if f.is_file() and f.name not in {"README", "metadata.json"}
+    )
+    res_files = sorted(
+        str(f.relative_to(result))
+        for f in result.rglob("*")
+        if f.is_file() and f.name not in {"README", "metadata.json"}
     )
 
-    left = sorted(
-        str(f.relative_to(REFERENCE_DIR))
-        for f in REFERENCE_DIR.rglob("*")
-        if f.is_file() and f.name != "README"
-    )
-    right = sorted(
-        str(f.relative_to(tmp_path))
-        for f in tmp_path.rglob("*")
-        if f.is_file() and f.name != "README"
+    assert ref_files == res_files
+
+    for f in ref_files:
+        ref_text = (reference / f).read_text()
+        res_text = (result / f).read_text().replace(os.sep, "/")
+        assert ref_text == res_text
+
+
+def run_stubgen(tmp_dir: pathlib.Path) -> None:
+    # Needs to be run in it's own process since we rely on imports being fresh
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pyside6_qml_stubgen",
+            "in",
+            "--out-dir",
+            "out",
+            "--file-relative-path",
+            tmp_dir,
+        ],
+        check=True,
+        cwd=tmp_dir,
+        env=collections.ChainMap({"PYTHONPATH": str(ROOT_PATH)}, os.environ),
     )
 
-    assert left == right
 
-    for f in left:
-        left_text = (REFERENCE_DIR / f).read_text()
-        right_text = (tmp_path / f).read_text().replace(os.sep, "/")
-        assert left_text == right_text
+@pytest.fixture
+def tmp_path_with_code(tmp_path: pathlib.Path) -> pathlib.Path:
+    (tmp_path / "in").mkdir()
+    for path in TARGET_DIR.glob("*.py"):
+        (tmp_path / "in" / path.name).write_text(path.read_text())
+    shutil.copytree(REFERENCE_DIR, tmp_path / "ref")
+    return tmp_path
+
+
+def test_run_and_compare(tmp_path_with_code: pathlib.Path) -> None:
+    run_stubgen(tmp_path_with_code)
+    assert_dirs_equal(tmp_path_with_code / "ref", tmp_path_with_code / "out")
+
+
+def test_run_and_compare_with_mtime_change(tmp_path_with_code: pathlib.Path) -> None:
+    run_stubgen(tmp_path_with_code)
+    (tmp_path_with_code / "in" / "clses2.py").write_bytes(
+        (tmp_path_with_code / "in" / "clses2.py").read_bytes()
+    )
+    run_stubgen(tmp_path_with_code)
+    assert_dirs_equal(tmp_path_with_code / "ref", tmp_path_with_code / "out")
+
+
+def test_run_and_compare_with_deletion(tmp_path_with_code: pathlib.Path) -> None:
+    run_stubgen(tmp_path_with_code)
+    (tmp_path_with_code / "in" / "submodule.py").unlink()
+    shutil.rmtree(tmp_path_with_code / "ref" / "target" / "sub")
+    run_stubgen(tmp_path_with_code)
+    assert_dirs_equal(tmp_path_with_code / "ref", tmp_path_with_code / "out")
+
+
+def test_run_and_compare_with_change(tmp_path_with_code: pathlib.Path) -> None:
+    run_stubgen(tmp_path_with_code)
+
+    def replace_in(path: pathlib.Path) -> None:
+        text = path.read_text()
+        assert "getNorm" in text
+        path.write_text(text.replace("getNorm", "getNorman"))
+
+    replace_in(tmp_path_with_code / "in" / "clses2.py")
+    for path in (tmp_path_with_code / "ref" / "target").iterdir():
+        if path.suffix in {".json", ".qmltypes"}:
+            replace_in(path)
+
+    run_stubgen(tmp_path_with_code)
+    assert_dirs_equal(tmp_path_with_code / "ref", tmp_path_with_code / "out")
+
+
+def test_run_and_compare_with_addition(tmp_path_with_code: pathlib.Path) -> None:
+    run_stubgen(tmp_path_with_code)
+
+    def replace_in(path: pathlib.Path) -> None:
+        text = path.read_text()
+        path.write_text(
+            re.sub("target.sub", r"\g<0>2", text).replace(
+                "submodule.py", "submodule2.py"
+            )
+        )
+
+    (tmp_path_with_code / "in" / "submodule2.py").write_text(
+        (tmp_path_with_code / "in" / "submodule.py").read_text()
+    )
+    shutil.copytree(
+        tmp_path_with_code / "ref" / "target" / "sub",
+        tmp_path_with_code / "ref" / "target" / "sub2",
+    )
+
+    replace_in(tmp_path_with_code / "in" / "submodule2.py")
+    for path in (tmp_path_with_code / "ref" / "target" / "sub2").iterdir():
+        replace_in(path)
+
+    run_stubgen(tmp_path_with_code)
+    assert_dirs_equal(tmp_path_with_code / "ref", tmp_path_with_code / "out")

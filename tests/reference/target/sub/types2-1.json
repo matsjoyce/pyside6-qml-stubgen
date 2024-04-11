@@ -40,6 +40,6 @@
         "PY_MODULES": [
             "target 1.0"
         ],
-        "inputFile": "tests/target/submodule.py"
+        "inputFile": "in/submodule.py"
     }
 ]

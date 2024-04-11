@@ -7,13 +7,13 @@ import QtQuick.tooling 1.2
 
 Module {
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "Anonymous"
         accessSemantics: "reference"
         prototype: "QObject"
     }
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "Named"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -21,7 +21,7 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "tests/target/clses2.py"
+        file: "in/clses2.py"
         name: "Named2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -29,7 +29,7 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "Normal"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -60,7 +60,7 @@ Module {
         }
     }
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "SignalsAndProperties"
         accessSemantics: "reference"
         prototype: "QStandardItemModel"
@@ -103,7 +103,7 @@ Module {
         Method { name: "slot2"; type: "Uncreatable"; isPointer: true }
     }
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "Singleton"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -113,7 +113,7 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "tests/target/clses2.py"
+        file: "in/clses2.py"
         name: "Singleton2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -123,7 +123,7 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "tests/target/clses2.py"
+        file: "in/clses2.py"
         name: "Singleton3"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -148,7 +148,7 @@ Module {
         }
     }
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "Uncreatable"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -157,7 +157,7 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "tests/target/clses.py"
+        file: "in/clses.py"
         name: "UncreatableWithReason"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -166,7 +166,7 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "tests/target/clses2.py"
+        file: "in/clses2.py"
         name: "UncreatableWithReason2"
         accessSemantics: "reference"
         prototype: "QObject"
