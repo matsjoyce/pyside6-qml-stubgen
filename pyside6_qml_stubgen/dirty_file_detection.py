@@ -43,6 +43,9 @@ def recursive_module_metadata_addition(
 ) -> None:
     if module_name in module_metadata:
         return
+    if module_name not in sys.modules:
+        module_metadata[module_name] = None
+        return
     mod = sys.modules[module_name]
     fname: str | None = getattr(mod, "__file__", None)
     if fname is None or not pathlib.Path(fname).exists():

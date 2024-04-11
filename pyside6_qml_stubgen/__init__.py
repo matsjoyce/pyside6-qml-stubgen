@@ -215,7 +215,7 @@ def import_dirty_modules(
     in_dirs: typing.Sequence[pathlib.Path],
     ignore_dirs: typing.Sequence[pathlib.Path],
     out_dir: pathlib.Path,
-) -> tuple[pyside_patching.ExtraCollectedInfo, set[pathlib.Path], set[pathlib.Path]]:
+) -> tuple[pyside_patching.ExtraCollectedInfo, set[pathlib.Path]]:
     extra_info = pyside_patching.patches()
     sys.path.append(".")
 
@@ -250,7 +250,6 @@ def import_dirty_modules(
     extra_info.resolve_delayed()
     return (
         extra_info,
-        {f.resolve() for f in all_python_files},
         {
             cf.resolve()
             for cf in dirty_file_detection.imported_files().union(dirty_files)
@@ -260,7 +259,6 @@ def import_dirty_modules(
 
 def update_qmlregistrar_files(
     extra_info: pyside_patching.ExtraCollectedInfo,
-    all_files: set[pathlib.Path],
     dirty_files: set[pathlib.Path],
     out_dir: pathlib.Path,
     metatypes_dir: pathlib.Path,
@@ -278,7 +276,6 @@ def update_qmlregistrar_files(
     foreign_types = list(metatypes_dir.glob("*_metatypes.json"))
     dirty_type_dirs = []
     qmldir_entries = collections.defaultdict(set)
-    clean_files = all_files - dirty_files
     for uri, major, minor in modules_to_process:
         out_path = out_dir / uri.replace(".", "/")
         types_json_file = out_path / f"types{major}-{minor}.json"
@@ -289,7 +286,7 @@ def update_qmlregistrar_files(
             data = [
                 cls
                 for cls in original_data
-                if pathlib.Path(cls.inputFile).resolve() in clean_files
+                if pathlib.Path(cls.inputFile).resolve() not in dirty_files
             ]
         else:
             original_data = []
@@ -298,11 +295,6 @@ def update_qmlregistrar_files(
         clses = extra_info.registered_classes.get((uri, major, minor), set())
         data.extend(parse_module(major, minor, clses, extra_info, file_relative_path))
         data.sort(key=lambda cls: cls.classes[0].className)
-        for cls in data:
-            if pathlib.Path(cls.inputFile).resolve() not in all_files:
-                raise RuntimeError(
-                    f"Found {cls.classes[0].className} registered for {uri} but the filename {cls.inputFile} is not in the files we scanned ({all_files})"
-                )
 
         if len(data) == 0:
             # Got no types, module must have been removed, so remove the stubs
@@ -398,14 +390,11 @@ def process(
     )
 
     print("Importing Python modules")
-    extra_info, all_files, dirty_files = import_dirty_modules(
-        in_dirs, ignore_dirs, out_dir
-    )
+    extra_info, dirty_files = import_dirty_modules(in_dirs, ignore_dirs, out_dir)
 
     print("Generating QML type info for QML modules")
     update_qmlregistrar_files(
         extra_info,
-        all_files,
         dirty_files,
         out_dir,
         metatypes_dir,
