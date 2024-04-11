@@ -229,7 +229,6 @@ def import_dirty_modules(
     dirty_files, module_metadata = dirty_file_detection.detect_new_and_dirty_files(
         all_python_files, dirty_file_detection.load_modules_metadata(out_dir)
     )
-    imported_files: set[pathlib.Path] = set()
     for fname, reason in dirty_files.items():
         module = ".".join(
             [x.name for x in fname.parents if x.name][::-1] + [fname.stem]
@@ -242,9 +241,7 @@ def import_dirty_modules(
             raise RuntimeError(
                 f"Imported module {module} was expected to come from {fname}, but instead came from {mod.__file__}"
             )
-        dirty_file_detection.recursive_module_metadata_addition(
-            module, module_metadata, imported_files
-        )
+        dirty_file_detection.recursive_module_metadata_addition(module, module_metadata)
 
     dirty_file_detection.save_modules_metadata(
         out_dir, dirty_file_detection.PythonModulesMetadata(module_metadata)
@@ -254,7 +251,10 @@ def import_dirty_modules(
     return (
         extra_info,
         {f.resolve() for f in all_python_files},
-        {cf.resolve() for cf in imported_files.union(dirty_files)},
+        {
+            cf.resolve()
+            for cf in dirty_file_detection.imported_files().union(dirty_files)
+        },
     )
 
 
