@@ -3,6 +3,7 @@ import importlib
 import inspect
 import itertools
 import pathlib
+import shlex
 import shutil
 import subprocess
 import sys
@@ -378,9 +379,22 @@ def process(
     if out_dir.exists() and force_rebuild:
         shutil.rmtree(out_dir)
     out_dir.mkdir(exist_ok=True)
+
+    cmd = ["pyside6-qml-stubgen", *map(str, in_dirs), "--out-dir", str(out_dir)]
+    for i in ignore_dirs:
+        cmd.extend(["--ignore", str(i)])
+    cmd.extend(
+        [
+            "--metatypes-dir",
+            str(metatypes_dir),
+            "--qmltyperegistrar-path",
+            str(qmltyperegistrar_path),
+        ]
+    )
+    if file_relative_path is not None:
+        cmd.extend(["--file-relative-path", str(file_relative_path)])
     (out_dir / "README").write_text(
-        f"""QML type stubs generated automatically using
-pyside6-qml-stubgen {' '.join(map(str, in_dirs))} --out-dir {out_dir} {' '.join(f'--ignore {i}' for i in ignore_dirs)} --metatypes-dir {metatypes_dir} --qmltyperegistrar-path {qmltyperegistrar_path}"""
+        f"QML type stubs generated automatically using\n{shlex.join(cmd)}"
     )
 
     print("Importing Python modules")
