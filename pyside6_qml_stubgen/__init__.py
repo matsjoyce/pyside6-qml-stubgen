@@ -226,8 +226,10 @@ def import_dirty_modules(
         )
         if not any(ig in fname.parents for ig in ignore_dirs)
     ]
-    dirty_files, module_metadata = dirty_file_detection.detect_new_and_dirty_files(
-        all_python_files, dirty_file_detection.load_modules_metadata(out_dir)
+    dirty_files, module_metadata, dependency_dirty_paths = (
+        dirty_file_detection.detect_new_and_dirty_files(
+            all_python_files, dirty_file_detection.load_modules_metadata(out_dir)
+        )
     )
     for fname, reason in dirty_files.items():
         module = ".".join(
@@ -252,7 +254,9 @@ def import_dirty_modules(
         extra_info,
         {
             cf.resolve()
-            for cf in dirty_file_detection.imported_files().union(dirty_files)
+            for cf in dirty_file_detection.imported_files()
+            .union(dirty_files)
+            .union(dependency_dirty_paths)
         },
     )
 
