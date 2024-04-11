@@ -35,7 +35,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/advanced.py"
+        "inputFile": "in/advanced.py"
     },
     {
         "classes": [
@@ -76,7 +76,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/advanced.py"
+        "inputFile": "in/advanced.py"
     },
     {
         "classes": [
@@ -105,7 +105,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/advanced.py"
+        "inputFile": "in/advanced.py"
     },
     {
         "classes": [
@@ -134,7 +134,7 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/advanced.py"
+        "inputFile": "in/advanced.py"
     },
     {
         "classes": [
@@ -176,6 +176,6 @@
             "QtQml"
         ],
         "PY_MODULES": [],
-        "inputFile": "tests/target/advanced.py"
+        "inputFile": "in/advanced.py"
     }
 ]

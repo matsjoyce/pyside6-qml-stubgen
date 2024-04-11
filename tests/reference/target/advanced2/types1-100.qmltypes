@@ -7,7 +7,7 @@ import QtQuick.tooling 1.2
 
 Module {
     Component {
-        file: "tests/target/advanced2.py"
+        file: "in/advanced2.py"
         name: "Layout2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -16,7 +16,7 @@ Module {
         attachedType: "LayoutAttached2"
     }
     Component {
-        file: "tests/target/advanced2.py"
+        file: "in/advanced2.py"
         name: "LayoutAttached2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -25,13 +25,13 @@ Module {
         Property { name: "margins"; type: "QMargins"; read: "margins"; index: 1; isReadonly: true }
     }
     Component {
-        file: "tests/target/advanced2.py"
+        file: "in/advanced2.py"
         name: "LineEditorExtension2"
         accessSemantics: "reference"
         prototype: "QObject"
     }
     Component {
-        file: "tests/target/advanced2.py"
+        file: "in/advanced2.py"
         name: "LineEditor2"
         accessSemantics: "reference"
         prototype: "QObject"

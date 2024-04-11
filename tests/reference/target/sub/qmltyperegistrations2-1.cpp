@@ -7,7 +7,7 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlmoduleregistration.h>
 
-#include <tests/target/submodule.py>
+#include <in/submodule.py>
 
 
 #if !defined(QT_STATIC)
