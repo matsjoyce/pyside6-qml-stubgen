@@ -1,21 +1,8 @@
-"""
-Generate QML stub files (.qmltypes) from Python modules (which use PySide6)
-
-Usage:
-    pyside6-qml-stubgen <in-dir>... --out-dir=<out-dir> [--ignore=<path>...] [--metatypes-dir=<dir>] [--qmltyperegistrar-path=<path>]
-
-Options:
-    --ignore=<path>                     Ignore all Python files that are children of thispath
-    --metatypes-dir=<dir>               Directory of the Qt 6 metatype files for core modules (automatically detected if not provided)
-    --qmltyperegistrar-path=<path>      Path of the qmltyperegistrar tool (automatically detected if not provided)
-"""
-
 import collections
 import dataclasses
 import importlib
 import inspect
 import itertools
-import json
 import pathlib
 import shutil
 import subprocess
@@ -23,8 +10,9 @@ import sys
 import types
 import typing
 
-import docopt
 from PySide6 import QtCore, QtQml
+
+from . import qmlregistrar_types
 
 T_TypeQObject = typing.TypeVar("T_TypeQObject", bound=QtCore.QObject)
 
@@ -357,7 +345,7 @@ def parse_module(
     clses: set[type[QtCore.QObject]],
     extra_info: ExtraCollectedInfo,
     file_relative_path: pathlib.Path | None,
-) -> typing.Sequence[typing.Mapping]:
+) -> typing.Sequence[qmlregistrar_types.Module]:
     ret = []
     for cls in sorted(clses, key=lambda c: c.__name__):
         depends_on: set[str] = set()
@@ -365,78 +353,87 @@ def parse_module(
         if file_relative_path is not None:
             input_file = input_file.relative_to(file_relative_path)
         ret.append(
-            {
-                "classes": [parse_class(cls, depends_on, extra_info)],
-                "outputRevision": 68,
-                "QML_IMPORT_MAJOR_VERSION": major,
-                "QML_IMPORT_MINOR_VERSION": minor,
-                "QT_MODULES": [
+            qmlregistrar_types.Module(
+                classes=[parse_class(cls, depends_on, extra_info)],
+                outputRevision=68,
+                QML_IMPORT_MAJOR_VERSION=major,
+                QML_IMPORT_MINOR_VERSION=minor,
+                QT_MODULES=[
                     m.__name__.removeprefix("PySide6.")
                     for m in sys.modules[cls.__module__].__dict__.values()
                     if isinstance(m, types.ModuleType)
                     and m.__name__.startswith("PySide6.")
                 ],
-                "PY_MODULES": list(depends_on),
-                "inputFile": input_file.as_posix(),
-            }
+                PY_MODULES=list(depends_on),
+                inputFile=input_file.as_posix(),
+            )
         )
     return ret
 
 
 def parse_class(
     cls: type[QtCore.QObject], depends_on: set[str], extra_info: ExtraCollectedInfo
-) -> typing.Mapping:
+) -> qmlregistrar_types.Class:
     meta = cls.staticMetaObject  # type: ignore[attr-defined]
 
     for base_cls in cls.__bases__:
         if module := extra_info.lookup_cls_module(base_cls):
             depends_on.add(module)
 
-    return {
-        "className": meta.className(),
-        "qualifiedClassName": cls.__qualname__,
-        "object": True,
-        "superClasses": [{"access": "public", "name": meta.superClass().className()}],
-        "classInfos": (
+    return qmlregistrar_types.Class(
+        className=meta.className(),
+        qualifiedClassName=cls.__qualname__,
+        object=True,
+        superClasses=[
+            qmlregistrar_types.SuperClass(
+                access="public", name=meta.superClass().className()
+            )
+        ],
+        classInfos=(
             [
                 parse_class_info(meta.classInfo(i))
                 for i in range(meta.classInfoOffset(), meta.classInfoCount())
             ]
-            + [{"name": n, "value": v} for n, v in extra_info.extra_class_infos[cls]]
+            + [
+                qmlregistrar_types.ClassInfo(name=n, value=v)
+                for n, v in extra_info.extra_class_infos[cls]
+            ]
         ),
-        "enums": [
+        enums=[
             parse_enum(meta.enumerator(i))
             for i in range(meta.enumeratorOffset(), meta.enumeratorCount())
         ],
-        "properties": [
+        properties=[
             parse_property(meta.property(i), cls, depends_on, extra_info)
             for i in range(meta.propertyOffset(), meta.propertyCount())
         ],
-        "signals": [
+        signals=[
             parse_method(meta.method(i), cls, depends_on, extra_info)
             for i in range(meta.methodOffset(), meta.methodCount())
             if meta.method(i).methodType() == QtCore.QMetaMethod.MethodType.Signal
         ],
-        "slots": [
+        slots=[
             parse_method(meta.method(i), cls, depends_on, extra_info)
             for i in range(meta.methodOffset(), meta.methodCount())
             if meta.method(i).methodType() == QtCore.QMetaMethod.MethodType.Slot
         ],
-    }
+    )
 
 
-def parse_class_info(cls_info: QtCore.QMetaClassInfo) -> typing.Mapping:
-    return {"name": cls_info.name(), "value": cls_info.value()}
+def parse_class_info(cls_info: QtCore.QMetaClassInfo) -> qmlregistrar_types.ClassInfo:
+    return qmlregistrar_types.ClassInfo(
+        name=str(cls_info.name()), value=str(cls_info.value())
+    )
 
 
-def parse_enum(enum: QtCore.QMetaEnum) -> typing.Mapping:
-    return {
-        "isClass": enum.isScoped(),
-        "isFlag": enum.isFlag(),
-        "name": enum.enumName(),
-        "type": "quint16",
-        "values": [enum.key(i) for i in range(enum.keyCount())],
-    }
+def parse_enum(enum: QtCore.QMetaEnum) -> qmlregistrar_types.Enum:
+    return qmlregistrar_types.Enum(
+        isClass=enum.isScoped(),
+        isFlag=enum.isFlag(),
+        name=str(enum.enumName()),
+        type="quint16",
+        values=[str(enum.key(i)) for i in range(enum.keyCount())],
+    )
 
 
 def resolve_type_name(
@@ -458,23 +455,23 @@ def parse_property(
     cls: type[QtCore.QObject],
     depends_on: set[str],
     extra_info: ExtraCollectedInfo,
-) -> typing.Mapping:
+) -> qmlregistrar_types.Property:
     p = getattr(cls, str(prop.name()))
     t = p.fget._type
-    ret = {
-        "name": prop.name(),
-        "type": resolve_type_name(
+    return qmlregistrar_types.Property(
+        name=str(prop.name()),
+        type=resolve_type_name(
             prop.typeName(), t, depends_on, extra_info  # type: ignore[arg-type]
         ),
-        "index": prop.propertyIndex(),
-    }
-    if prop.hasNotifySignal():
-        ret["notify"] = bytes(prop.notifySignal().name().data()).decode()
-    if prop.isReadable() and p.fget:
-        ret["read"] = p.fget.__name__
-    if prop.isWritable() and p.fset:
-        ret["write"] = p.fset.__name__
-    return ret
+        index=prop.propertyIndex(),
+        notify=(
+            bytes(prop.notifySignal().name().data()).decode()
+            if prop.hasNotifySignal()
+            else None
+        ),
+        read=p.fget.__name__ if prop.isReadable() and p.fget else None,
+        write=p.fset.__name__ if prop.isWritable() and p.fset else None,
+    )
 
 
 def parse_method(
@@ -482,30 +479,30 @@ def parse_method(
     cls: type[QtCore.QObject],
     depends_on: set[str],
     extra_info: ExtraCollectedInfo,
-) -> typing.Mapping:
+) -> qmlregistrar_types.Method:
     m = getattr(cls, bytes(meth.name().data()).decode())
     ts = extra_info.signal_types[m]
     try:
         param_names: typing.Iterable[str] = list(inspect.signature(m).parameters)[1:]
     except ValueError:
         param_names = itertools.cycle([""])
-    return {
-        "access": "public",
-        "name": bytes(meth.name().data()).decode(),
-        "arguments": [
-            {
-                "name": bytes(meth.parameterNames()[i].data()).decode() or n,
-                "type": resolve_type_name(
+    return qmlregistrar_types.Method(
+        access="public",
+        name=bytes(meth.name().data()).decode(),
+        arguments=[
+            qmlregistrar_types.Argument(
+                name=bytes(meth.parameterNames()[i].data()).decode() or n,
+                type=resolve_type_name(
                     bytes(meth.parameterTypeName(i).data()).decode(),
                     t,
                     depends_on,
                     extra_info,
                 ),
-            }
+            )
             for i, t, n in zip(range(meth.parameterCount()), ts[0], param_names)
         ],
-        "returnType": resolve_type_name(meth.typeName(), ts[1], depends_on, extra_info),  # type: ignore[arg-type]
-    }
+        returnType=resolve_type_name(meth.typeName(), ts[1], depends_on, extra_info),  # type: ignore[arg-type]
+    )
 
 
 def detect_metatypes_dir() -> pathlib.Path:
@@ -590,8 +587,9 @@ pyside6-qml-stubgen {' '.join(map(str, in_dirs))} --out-dir {out_dir} {' '.join(
         out_path.mkdir(parents=True, exist_ok=True)
         type_dirs.append((uri, major, minor, out_path, data))
         foreign_types.append(out_path / f"types{major}-{minor}.json")
-        with open(out_path / f"types{major}-{minor}.json", "w") as f:
-            json.dump(data, f, indent=4)
+        qmlregistrar_types.write_qmlregistrar_file(
+            out_path / f"types{major}-{minor}.json", data
+        )
 
     qmldir_entries = collections.defaultdict(set)
 
@@ -620,7 +618,7 @@ pyside6-qml-stubgen {' '.join(map(str, in_dirs))} --out-dir {out_dir} {' '.join(
         qmldir_entries[out_path, uri].add(f"typeinfo types{major}-{minor}.qmltypes\n")
         for n in set(
             itertools.chain.from_iterable(
-                [d["QT_MODULES"] + d["PY_MODULES"] for d in data]
+                [[*d.QT_MODULES, *d.PY_MODULES] for d in data]
             )
         ):
             qmldir_entries[out_path, uri].add(f"depends {n}\n")
@@ -630,24 +628,3 @@ pyside6-qml-stubgen {' '.join(map(str, in_dirs))} --out-dir {out_dir} {' '.join(
             f.write(f"module {uri}\n")
             for line in sorted(lines):
                 f.write(line)
-
-
-def main() -> None:
-    args = docopt.docopt(__doc__)
-    process(
-        in_dirs=[pathlib.Path(p) for p in args["<in-dir>"]],
-        ignore_dirs=[pathlib.Path(ig) for ig in args["--ignore"]],
-        out_dir=pathlib.Path(args["--out-dir"]),
-        metatypes_dir=(
-            pathlib.Path(args["--metatypes-dir"]) if args["--metatypes-dir"] else None
-        ),
-        qmltyperegistrar_path=(
-            pathlib.Path(args["--qmltyperegistrar-path"])
-            if args["--qmltyperegistrar-path"]
-            else None
-        ),
-    )
-
-
-if __name__ == "__main__":
-    main()

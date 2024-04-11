@@ -41,7 +41,7 @@ jobs:
           black --check .
       - name: Type check with mypy
         run: |
-          mypy pyside6_qml_stubgen.py tests --exclude tests/target
+          mypy pyside6_qml_stubgen tests --exclude tests/target
       - name: Test with pytest
         run: |
           pytest

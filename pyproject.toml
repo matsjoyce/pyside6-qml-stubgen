@@ -1,14 +1,9 @@
 [project]
 name = "pyside6-qml-stubgen"
 description = "Generate QML stub files (.qmltypes) from Python modules (which use PySide6)"
-authors = [
-    {name = "Matthew Joyce"},
-]
+authors = [{ name = "Matthew Joyce" }]
 readme = "README.md"
-dependencies = [
-    "PySide6>=6.4",
-    "docopt"
-]
+dependencies = ["PySide6 >= 6.4", "docopt", "pydantic >= 2"]
 requires-python = ">= 3.10"
 keywords = ["qml", "type checking", "pyside6", "qt6"]
 classifiers = [
@@ -34,14 +29,7 @@ Issues = "https://github.com/matsjoyce/pyside6-qml-stubgen/issues"
 pyside6-qml-stubgen = "pyside6_qml_stubgen:main"
 
 [project.optional-dependencies]
-dev = [
-    "pytest",
-    "mypy",
-    "black",
-    "types-docopt",
-    "build",
-    "pytest-cov"
-]
+dev = ["pytest", "mypy", "black", "types-docopt", "build", "pytest-cov"]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]

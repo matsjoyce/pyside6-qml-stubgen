@@ -19,3 +19,6 @@ pytest-cov==5.0.0
 shiboken6==6.6.2
 types-docopt==0.6.11.4
 typing_extensions==4.10.0
+annotated-types==0.6.0
+pydantic==2.6.4
+pydantic-core==2.16.3
