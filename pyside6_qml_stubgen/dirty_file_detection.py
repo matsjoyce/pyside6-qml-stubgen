@@ -40,16 +40,17 @@ def save_modules_metadata(
 def recursive_module_metadata_addition(
     module_name: str,
     module_metadata: dict[str, PythonModuleMetadata | None],
-    imported_files: set[pathlib.Path],
 ) -> None:
+    if module_name in module_metadata:
+        return
+    if module_name not in sys.modules:
+        module_metadata[module_name] = None
+        return
     mod = sys.modules[module_name]
     fname: str | None = getattr(mod, "__file__", None)
     if fname is None or not pathlib.Path(fname).exists():
         module_metadata[module_name] = None
         return
-    if pathlib.Path(fname) in imported_files:
-        return
-    imported_files.add(pathlib.Path(fname))
     deps = [
         m.__name__ for m in mod.__dict__.values() if isinstance(m, types.ModuleType)
     ]
@@ -59,15 +60,23 @@ def recursive_module_metadata_addition(
         dependencies=deps,
     )
     for dep in deps:
-        recursive_module_metadata_addition(dep, module_metadata, imported_files)
+        recursive_module_metadata_addition(dep, module_metadata)
+
+
+def imported_files() -> set[pathlib.Path]:
+    files = set()
+    for mod in sys.modules.values():
+        fname: str | None = getattr(mod, "__file__", None)
+        if fname is not None and pathlib.Path(fname).exists():
+            files.add(pathlib.Path(fname))
+    return files
 
 
 def detect_new_and_dirty_files(
     current_files: typing.Sequence[pathlib.Path],
     modules_metadata: PythonModulesMetadata,
 ) -> tuple[
-    dict[pathlib.Path, str],
-    dict[str, PythonModuleMetadata | None],
+    dict[pathlib.Path, str], dict[str, PythonModuleMetadata | None], set[pathlib.Path]
 ]:
     # Perform a Bellman-Ford-style search (due to possible import cycles) to find out the full
     # set of paths that should be considered dirty (and why)
@@ -136,4 +145,12 @@ def detect_new_and_dirty_files(
         for name, meta in modules_metadata.modules.items()
         if name in reachable_modules and module_dirty[name] is None
     }
-    return dirty_files, cleaned_modules_metadata
+    return (
+        dirty_files,
+        cleaned_modules_metadata,
+        {
+            meta.path
+            for name, reason in module_dirty.items()
+            if reason is not None and (meta := modules_metadata.modules[name])
+        },
+    )
