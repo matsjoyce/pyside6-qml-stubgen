@@ -34,12 +34,13 @@ def parse_module(
                 outputRevision=68,
                 QML_IMPORT_MAJOR_VERSION=major,
                 QML_IMPORT_MINOR_VERSION=minor,
-                QT_MODULES=[
-                    m.__name__.removeprefix("PySide6.")
-                    for m in sys.modules[cls.__module__].__dict__.values()
-                    if isinstance(m, types.ModuleType)
-                    and m.__name__.startswith("PySide6.")
-                ],
+                QT_MODULES=sorted(
+                    [
+                        dep.removeprefix("PySide6.")
+                        for dep in extra_info.module_dependencies[cls.__module__]
+                        if dep.startswith("PySide6.")
+                    ]
+                ),
                 PY_MODULES=list(depends_on),
                 inputFile=input_file.as_posix(),
             )
@@ -243,7 +244,9 @@ def import_dirty_modules(
             raise RuntimeError(
                 f"Imported module {module} was expected to come from {fname}, but instead came from {mod.__file__}"
             )
-        dirty_file_detection.recursive_module_metadata_addition(module, module_metadata)
+        dirty_file_detection.recursive_module_metadata_addition(
+            module, extra_info.module_dependencies, module_metadata
+        )
 
     dirty_file_detection.save_modules_metadata(
         out_dir, dirty_file_detection.PythonModulesMetadata(module_metadata)

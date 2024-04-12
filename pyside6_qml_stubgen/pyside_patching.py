@@ -1,3 +1,4 @@
+import builtins
 import collections
 import dataclasses
 import inspect
@@ -23,6 +24,9 @@ class ExtraCollectedInfo:
     delayed_registrations: typing.DefaultDict[
         type[QtCore.QObject], set[type[QtCore.QObject]]
     ] = dataclasses.field(default_factory=lambda: collections.defaultdict(set))
+    module_dependencies: typing.DefaultDict[str, set[str]] = dataclasses.field(
+        default_factory=lambda: collections.defaultdict(set)
+    )
 
     def lookup_cls_module(self, cls: type[QtCore.QObject]) -> str | None:
         for (uri, major, minor), clses in self.registered_classes.items():
@@ -321,11 +325,35 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
     QtCore.Signal = Signal  # type: ignore[assignment,misc]
 
 
+def patch_builtins(info: ExtraCollectedInfo) -> None:
+    @patch_with(builtins)
+    def __import__(
+        name: str,
+        globals: typing.Mapping[str, object] | None = None,
+        locals: typing.Mapping[str, object] | None = None,
+        fromlist: typing.Sequence[str] | None = None,
+        level: int = 0,
+        *,
+        old_fn: typing.Callable,
+    ) -> types.ModuleType:
+        calling_module = (globals or locals or {}).get("__name__")
+        mod = old_fn(name, globals, locals, fromlist, level)
+        if isinstance(calling_module, str):
+            info.module_dependencies[calling_module].add(mod.__name__)
+            for fromname in fromlist or ():
+                if isinstance(
+                    frommod := getattr(mod, fromname, None), types.ModuleType
+                ):
+                    info.module_dependencies[calling_module].add(frommod.__name__)
+        return mod
+
+
 def patches() -> ExtraCollectedInfo:
     info = ExtraCollectedInfo()
 
     patch_functions(info)
     patch_class_decorators(info)
     patch_meta_system(info)
+    patch_builtins(info)
 
     return info
