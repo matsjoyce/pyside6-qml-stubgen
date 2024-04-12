@@ -1,7 +1,6 @@
 import dataclasses
 import pathlib
 import sys
-import types
 import typing
 
 import pydantic
@@ -39,6 +38,7 @@ def save_modules_metadata(
 
 def recursive_module_metadata_addition(
     module_name: str,
+    dependency_map: typing.Mapping[str, set[str]],
     module_metadata: dict[str, PythonModuleMetadata | None],
 ) -> None:
     if module_name in module_metadata:
@@ -51,16 +51,14 @@ def recursive_module_metadata_addition(
     if fname is None or not pathlib.Path(fname).exists():
         module_metadata[module_name] = None
         return
-    deps = [
-        m.__name__ for m in mod.__dict__.values() if isinstance(m, types.ModuleType)
-    ]
+    deps = dependency_map.get(module_name, set())
     module_metadata[module_name] = PythonModuleMetadata(
         modification_time=pathlib.Path(fname).stat().st_mtime,
         path=pathlib.Path(fname),
-        dependencies=deps,
+        dependencies=sorted(deps),
     )
     for dep in deps:
-        recursive_module_metadata_addition(dep, module_metadata)
+        recursive_module_metadata_addition(dep, dependency_map, module_metadata)
 
 
 def imported_files() -> set[pathlib.Path]:
