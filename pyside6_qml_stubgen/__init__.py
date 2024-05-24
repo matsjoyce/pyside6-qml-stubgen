@@ -219,28 +219,45 @@ def import_dirty_modules(
 ) -> tuple[pyside_patching.ExtraCollectedInfo, set[pathlib.Path]]:
     extra_info = pyside_patching.patches()
     sys.path.append(".")
+    sys_paths = sorted(
+        [pathlib.Path(p).resolve() for p in sys.path if pathlib.Path(p).is_dir()],
+        key=lambda p: len(p.parts),
+        reverse=True,
+    )
 
     all_python_files = [
-        fname
+        fname.resolve()
         for fname in itertools.chain.from_iterable(
-            in_dir.rglob("*.py") for in_dir in in_dirs
+            in_dir.rglob(suffix) for in_dir in in_dirs for suffix in ("*.py", "*.pyd")
         )
         if not any(ig in fname.parents for ig in ignore_dirs)
     ]
-    dirty_files, module_metadata, dependency_dirty_paths = (
-        dirty_file_detection.detect_new_and_dirty_files(
-            all_python_files, dirty_file_detection.load_modules_metadata(out_dir)
-        )
+    (
+        dirty_files,
+        module_metadata,
+        dependency_dirty_paths,
+    ) = dirty_file_detection.detect_new_and_dirty_files(
+        all_python_files, dirty_file_detection.load_modules_metadata(out_dir)
     )
     for fname, reason in dirty_files.items():
+        relative_fname = fname
+        for sys_p in sys_paths:
+            if sys_p in fname.parents:
+                relative_fname = fname.relative_to(sys_p)
+                break
+        else:
+            raise RuntimeError(f"Could not deduce import name for {fname}")
+
         module = ".".join(
-            [x.name for x in fname.parents if x.name][::-1] + [fname.stem]
+            [x.name for x in relative_fname.parents if x.name][::-1]
+            + [relative_fname.name.split(".")[0]]
         )
         if module.endswith(".__init__"):
             module = module.removesuffix(".__init__")
+
         print(f" -> {module} ({reason})")
         mod = importlib.import_module(module)
-        if not mod.__file__ or pathlib.Path(mod.__file__).resolve() != fname.resolve():
+        if not mod.__file__ or pathlib.Path(mod.__file__).resolve() != fname:
             raise RuntimeError(
                 f"Imported module {module} was expected to come from {fname}, but instead came from {mod.__file__}"
             )
@@ -256,7 +273,7 @@ def import_dirty_modules(
     return (
         extra_info,
         {
-            cf.resolve()
+            cf
             for cf in dirty_file_detection.imported_files()
             .union(dirty_files)
             .union(dependency_dirty_paths)
