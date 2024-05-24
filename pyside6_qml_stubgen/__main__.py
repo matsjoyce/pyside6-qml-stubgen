@@ -5,7 +5,7 @@ Usage:
     pyside6-qml-stubgen <in-dir>... --out-dir=<out-dir> [--ignore=<path>...] [--metatypes-dir=<dir>] [--qmltyperegistrar-path=<path>] [--force-rebuild] [--file-relative-path=<div>]
 
 Options:
-    --ignore=<path>                     Ignore all Python files that are children of thispath
+    --ignore=<path>                     Ignore all Python files that are children of this path
     --metatypes-dir=<dir>               Directory of the Qt 6 metatype files for core modules (automatically detected if not provided)
     --qmltyperegistrar-path=<path>      Path of the qmltyperegistrar tool (automatically detected if not provided)
     --force-rebuild                     Rebuild the stubs from scratch instead of doing a partial update
