@@ -113,7 +113,7 @@ def detect_new_and_dirty_files(
     reachable_modules = {
         maybe_name
         for cf in current_files
-        if (maybe_name := module_path_to_name.get(cf.resolve()))
+        if (maybe_name := module_path_to_name.get(cf))
     }
 
     previous_reachable_modules: set[str] = set()
@@ -135,7 +135,7 @@ def detect_new_and_dirty_files(
             )
         )
         for cf in current_files
-        if (module_name := module_path_to_name.get(cf.resolve())) is None
+        if (module_name := module_path_to_name.get(cf)) is None
         or (dirty_dep := module_dirty[module_name])
     }
     cleaned_modules_metadata = {
