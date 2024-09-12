@@ -21,6 +21,7 @@ def parse_module(
     clses: set[type[QtCore.QObject]],
     extra_info: pyside_patching.ExtraCollectedInfo,
     file_relative_path: pathlib.Path | None,
+    extra_external_modules: set[str],
 ) -> typing.Sequence[qmlregistrar_types.Module]:
     ret = []
     for cls in clses:
@@ -38,7 +39,7 @@ def parse_module(
                     [
                         dep.removeprefix("PySide6.")
                         for dep in extra_info.module_dependencies[cls.__module__]
-                        if dep.startswith("PySide6.")
+                        if dep.startswith("PySide6.") or dep in extra_external_modules
                     ]
                 ),
                 PY_MODULES=list(depends_on),
@@ -288,6 +289,7 @@ def update_qmlregistrar_files(
     metatypes_dir: pathlib.Path,
     qmltyperegistrar_path: pathlib.Path,
     file_relative_path: pathlib.Path | None,
+    extra_external_modules: set[str],
 ) -> None:
     # Find all QML modules that exist
     modules_to_process = set(extra_info.registered_classes)
@@ -317,7 +319,16 @@ def update_qmlregistrar_files(
             data = []
 
         clses = extra_info.registered_classes.get((uri, major, minor), set())
-        data.extend(parse_module(major, minor, clses, extra_info, file_relative_path))
+        data.extend(
+            parse_module(
+                major,
+                minor,
+                clses,
+                extra_info,
+                file_relative_path,
+                extra_external_modules,
+            )
+        )
         data.sort(key=lambda cls: cls.classes[0].className)
 
         if len(data) == 0:
@@ -385,6 +396,7 @@ def process(
     qmltyperegistrar_path: pathlib.Path | None,
     *,
     file_relative_path: pathlib.Path | None = None,
+    extra_external_modules: set[str] | None = None,
     force_rebuild: bool = False,
 ) -> None:
     if metatypes_dir is None:
@@ -424,4 +436,5 @@ def process(
         metatypes_dir,
         qmltyperegistrar_path,
         file_relative_path,
+        extra_external_modules or set(),
     )
