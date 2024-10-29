@@ -299,7 +299,14 @@ def update_qmlregistrar_files(
         modules_to_process.add((uri, major, minor))
 
     # Iterate though each QML module and update the qmlregistrar file (or remove it)
-    foreign_types = list(metatypes_dir.glob("*_metatypes.json"))
+    foreign_types = [
+        ft
+        for ft in metatypes_dir.glob("*_metatypes.json")
+        # QtGraphs duplicates a lot of type names from QtDataVisualization and QtCharts
+        # Fixing this properly involves somehow working out which metatypes files are needed,
+        # so work around this for now by just not including the old modules
+        if "qt6datavisualization" not in ft.name and "qt6charts" not in ft.name
+    ]
     dirty_type_dirs = []
     qmldir_entries = collections.defaultdict(set)
     for uri, major, minor in modules_to_process:
@@ -356,10 +363,11 @@ def update_qmlregistrar_files(
     # Run qmltyperegistrar on all dirty modules
     for uri, major, minor, out_path, len_clses in dirty_type_dirs:
         print(f" -> {uri} {major}.{minor} (contains {len_clses} classes)")
+        input_types_json = out_path / f"types{major}-{minor}.json"
         subprocess.run(
             [
                 qmltyperegistrar_path,
-                out_path / f"types{major}-{minor}.json",
+                input_types_json,
                 "-o",
                 out_path / f"qmltyperegistrations{major}-{minor}.cpp",
                 "--generate-qmltypes",
@@ -371,7 +379,7 @@ def update_qmlregistrar_files(
                 "--minor-version",
                 str(minor),
                 "--foreign-types",
-                ",".join(map(str, foreign_types)),
+                ",".join([str(ft) for ft in foreign_types if ft != input_types_json]),
             ],
             check=True,
         )
