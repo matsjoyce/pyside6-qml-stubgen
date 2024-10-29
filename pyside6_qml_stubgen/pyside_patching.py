@@ -1,5 +1,6 @@
 import builtins
 import collections
+import contextlib
 import dataclasses
 import inspect
 import types
@@ -81,6 +82,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
         info.add_cls(uri, version_major, version_minor, type_obj)
+        old_fn(type_obj, uri, version_major, version_minor, qml_name, callback)
 
     @patch_with(QtQml)
     def qmlRegisterSingletonType(
@@ -96,6 +98,14 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
         info.add_cls(uri, version_major, version_minor, type_obj)
+        old_fn(
+            type_obj,
+            uri,
+            version_major,
+            version_minor,
+            qml_name,
+            *([callback] if callback else []),
+        )
 
     @patch_with(QtQml)
     def qmlRegisterType(
@@ -109,6 +119,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
         info.add_cls(uri, version_major, version_minor, type_obj)
+        old_fn(type_obj, uri, version_major, version_minor, qml_name)
 
     @patch_with(QtQml)
     def qmlRegisterUncreatableMetaObject(
@@ -138,6 +149,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         info.extra_class_infos[type_obj].append(("QML.UncreatableReason", message))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
         info.add_cls(uri, version_major, version_minor, type_obj)
+        old_fn(type_obj, uri, version_major, version_minor, qml_name, message)
 
 
 def patch_class_decorators(info: ExtraCollectedInfo) -> None:
@@ -155,28 +167,44 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
         minor = glob.get("QML_IMPORT_MINOR_VERSION", 0)
         return name, major, minor
 
+    @contextlib.contextmanager
+    def module_in_globals(name: str, major: int, minor: int) -> typing.Iterator[None]:
+        globals()["QML_IMPORT_NAME"] = name
+        globals()["QML_IMPORT_MAJOR_VERSION"] = major
+        globals()["QML_IMPORT_MINOR_VERSION"] = minor
+        try:
+            yield
+        finally:
+            del globals()["QML_IMPORT_NAME"]
+            del globals()["QML_IMPORT_MAJOR_VERSION"]
+            del globals()["QML_IMPORT_MINOR_VERSION"]
+
     @patch_with(QtQml)
     def QmlSingleton(
         cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Singleton", "true"))
-        return cls
+        return old_fn(cls)
 
     @patch_with(QtQml)
     def QmlElement(
         cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "auto"))
-        info.add_cls(*get_module(), cls)
-        return cls
+        mod_info = get_module()
+        info.add_cls(*mod_info, cls)
+        with module_in_globals(*mod_info):
+            return old_fn(cls)
 
     @patch_with(QtQml)
     def QmlAnonymous(
         cls: type[T_TypeQObject], *, old_fn: typing.Callable
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "anonymous"))
-        info.add_cls(*get_module(), cls)
-        return cls
+        mod_info = get_module()
+        info.add_cls(*mod_info, cls)
+        with module_in_globals(*mod_info):
+            return old_fn(cls)
 
     @patch_with(QtQml)
     def QmlNamedElement(
@@ -184,8 +212,10 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
             info.extra_class_infos[cls].append(("QML.Element", name))
-            info.add_cls(*get_module(stack_levels=2), cls)
-            return cls
+            mod_info = get_module(stack_levels=2)
+            info.add_cls(*mod_info, cls)
+            with module_in_globals(*mod_info):
+                return old_fn(name)(cls)
 
         return w
 
@@ -198,7 +228,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             if reason is not None:
                 info.extra_class_infos[cls].append(("QML.UncreatableReason", reason))
 
-            return cls
+            return old_fn(reason)(cls)
 
         return w
 
@@ -216,7 +246,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             info.extra_class_infos[cls].append(
                 ("QML.Foreign", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
-            return cls
+            return old_fn(type_obj)(cls)
 
         return w
 
@@ -234,7 +264,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             info.extra_class_infos[cls].append(
                 ("QML.Extended", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
-            return cls
+            return old_fn(type_obj)(cls)
 
         return w
 
@@ -252,7 +282,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             info.extra_class_infos[cls].append(
                 ("QML.Attached", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
-            return cls
+            return old_fn(type_obj)(cls)
 
         return w
 
@@ -263,13 +293,11 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
         *args: typing.Mapping[str, str], old_fn: typing.Callable, **kwargs: str
     ) -> typing.Callable[[type[T_TypeQObject]], type[T_TypeQObject]]:
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
-            for arg in args:
-                for n, k in arg.items():
-                    info.extra_class_infos[cls].append((n, k))
-            for n, k in kwargs.items():
+            infos = dict(collections.ChainMap(*map(dict, args), kwargs))
+            for n, k in infos.items():
                 info.extra_class_infos[cls].append((n, k))
 
-            return cls
+            return old_fn(infos)(cls)
 
         return w
 
