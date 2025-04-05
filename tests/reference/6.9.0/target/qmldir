@@ -1,0 +1,6 @@
+module target
+depends QtCore
+depends QtGui
+depends QtQml
+depends target 1.0
+typeinfo types1-0.qmltypes

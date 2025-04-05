@@ -1,0 +1,4 @@
+module target.advanced2
+depends QtCore
+depends QtQml
+typeinfo types1-100.qmltypes

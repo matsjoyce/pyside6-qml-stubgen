@@ -1,0 +1,529 @@
+[
+    {
+        "classes": [
+            {
+                "className": "Anonymous",
+                "qualifiedClassName": "Anonymous",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "anonymous"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Named",
+                "qualifiedClassName": "Named",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "NamedSomethingDifferent"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Named2",
+                "qualifiedClassName": "Named2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "NamedSomethingDifferent2"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Normal",
+                "qualifiedClassName": "Normal",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "SignalsAndProperties",
+                "qualifiedClassName": "SignalsAndProperties",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QStandardItemModel"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "D-Bus Interface",
+                        "value": "/org/thing/stuff"
+                    },
+                    {
+                        "name": "BigProblem",
+                        "value": "YES"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [
+                    {
+                        "isClass": true,
+                        "isFlag": false,
+                        "name": "Flags",
+                        "type": "quint16",
+                        "values": [
+                            "YES",
+                            "NO",
+                            "MAYBE"
+                        ]
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "anon",
+                        "type": "Anonymous*",
+                        "index": 2,
+                        "read": "anon"
+                    },
+                    {
+                        "name": "norm",
+                        "type": "Normal*",
+                        "index": 3,
+                        "notify": "normChanged",
+                        "read": "norm",
+                        "write": "norm"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "normChanged",
+                        "arguments": [
+                            {
+                                "name": "",
+                                "type": "Normal*"
+                            },
+                            {
+                                "name": "",
+                                "type": "int"
+                            },
+                            {
+                                "name": "",
+                                "type": "bool"
+                            }
+                        ],
+                        "returnType": "void"
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "slot1",
+                        "arguments": [
+                            {
+                                "name": "x",
+                                "type": "int"
+                            },
+                            {
+                                "name": "y",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "z",
+                                "type": "Normal*"
+                            }
+                        ],
+                        "returnType": "void"
+                    },
+                    {
+                        "access": "public",
+                        "name": "slot2",
+                        "arguments": [],
+                        "returnType": "Uncreatable*"
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [
+            "target 1.0"
+        ],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Singleton",
+                "qualifiedClassName": "Singleton",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Singleton",
+                        "value": "true"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Singleton2",
+                "qualifiedClassName": "Singleton2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Singleton",
+                        "value": "true"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "Singleton2"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Singleton3",
+                "qualifiedClassName": "Singleton3",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Singleton",
+                        "value": "true"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "Singleton3"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "name": "norm",
+                        "type": "Named2*",
+                        "index": 1,
+                        "notify": "normChanged",
+                        "read": "getNorm",
+                        "write": "setNorm"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "normChanged",
+                        "arguments": [
+                            {
+                                "name": "",
+                                "type": "Named2*"
+                            },
+                            {
+                                "name": "",
+                                "type": "int"
+                            },
+                            {
+                                "name": "",
+                                "type": "bool"
+                            }
+                        ],
+                        "returnType": "void"
+                    }
+                ],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [
+            "target 1.0"
+        ],
+        "inputFile": "in/clses2.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "Uncreatable",
+                "qualifiedClassName": "Uncreatable",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Creatable",
+                        "value": "false"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "UncreatableWithReason",
+                "qualifiedClassName": "UncreatableWithReason",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Creatable",
+                        "value": "false"
+                    },
+                    {
+                        "name": "QML.UncreatableReason",
+                        "value": "Don't make me!"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "UncreatableWithReason2",
+                "qualifiedClassName": "UncreatableWithReason2",
+                "object": true,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Creatable",
+                        "value": "false"
+                    },
+                    {
+                        "name": "QML.UncreatableReason",
+                        "value": "Don't make me"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "UncreatableWithReason2"
+                    }
+                ],
+                "enums": [],
+                "properties": [],
+                "signals": [],
+                "slots": []
+            }
+        ],
+        "outputRevision": 68,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "in/clses2.py"
+    }
+]
