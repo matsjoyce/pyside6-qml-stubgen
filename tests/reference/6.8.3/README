@@ -1,0 +1,2 @@
+QML type stubs generated automatically using
+pyside6-qml-stubgen in --out-dir out --metatypes-dir /home/matthew/Programming/Python/pyside6-qml-stubgen/venv68/lib/python3.12/site-packages/PySide6/Qt/metatypes --qmltyperegistrar-path /home/matthew/Programming/Python/pyside6-qml-stubgen/venv68/lib/python3.12/site-packages/PySide6/Qt/libexec/qmltyperegistrar --file-relative-path /tmp/pytest-of-matthew/pytest-45/test_run_and_compare0

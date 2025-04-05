@@ -1,0 +1,5 @@
+module target.sub
+depends QtCore
+depends QtQml
+depends target 1.0
+typeinfo types2-1.qmltypes

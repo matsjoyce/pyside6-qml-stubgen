@@ -7,8 +7,12 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlmoduleregistration.h>
 
-#include <in/clses.py>
-#include <in/clses2.py>
+#if __has_include(<in/clses.py>)
+#  include <in/clses.py>
+#endif
+#if __has_include(<in/clses2.py>)
+#  include <in/clses2.py>
+#endif
 
 
 #if !defined(QT_STATIC)
@@ -18,6 +22,7 @@
 #endif
 Q_QMLTYPE_EXPORT void qml_register_types_target()
 {
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     qmlRegisterTypesAndRevisions<Anonymous>("target", 1);
     qmlRegisterTypesAndRevisions<Named>("target", 1);
     qmlRegisterTypesAndRevisions<Named2>("target", 1);
@@ -25,13 +30,15 @@ Q_QMLTYPE_EXPORT void qml_register_types_target()
     QMetaType::fromType<QStandardItemModel *>().id();
     qmlRegisterTypesAndRevisions<SignalsAndProperties>("target", 1);
     qmlRegisterAnonymousType<QAbstractItemModel, 254>("target", 1);
+    QMetaType::fromType<SignalsAndProperties::Flags>().id();
     qmlRegisterTypesAndRevisions<Singleton>("target", 1);
     qmlRegisterTypesAndRevisions<Singleton2>("target", 1);
     qmlRegisterTypesAndRevisions<Singleton3>("target", 1);
     qmlRegisterTypesAndRevisions<Uncreatable>("target", 1);
     qmlRegisterTypesAndRevisions<UncreatableWithReason>("target", 1);
     qmlRegisterTypesAndRevisions<UncreatableWithReason2>("target", 1);
+    QT_WARNING_POP
     qmlRegisterModule("target", 1, 0);
 }
 
-static const QQmlModuleRegistration registration("target", qml_register_types_target);
+static const QQmlModuleRegistration targetRegistration("target", qml_register_types_target);

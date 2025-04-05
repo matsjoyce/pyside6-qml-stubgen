@@ -17,7 +17,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        pyside6_version: [6.8.3]
+        include:
+          - os: ubuntu-latest
+            pyside6_version: 6.7.3
+          - os: ubuntu-latest
+            pyside6_version: 6.9.0
+            build_wheel: true
     runs-on: ${{ matrix.os }}
+    name: "Test on ${{ matrix.os }} with PySide6 ${{ matrix.pyside6_version }}"
 
     steps:
       - name: Checkout
@@ -35,7 +43,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          echo "PySide6==${{ matrix.pyside6_version }}" > constraint.txt
+          pip install -r requirements.txt -c constraint.txt
       - name: Check formatting with black
         run: |
           black --check .
@@ -46,11 +55,11 @@ jobs:
         run: |
           pytest
       - name: Build wheel
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.build_wheel == true
         run: |
           python -m build
       - name: Upload wheels
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.build_wheel == true
         uses: actions/upload-artifact@v4
         with:
           name: pyside6-qml-stubgen-wheel

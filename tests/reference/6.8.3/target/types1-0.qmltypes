@@ -68,6 +68,7 @@ Module {
         exportMetaObjectRevisions: [256]
         Enum {
             name: "Flags"
+            isScoped: true
             type: "ushort"
             values: ["YES", "NO", "MAYBE"]
         }
