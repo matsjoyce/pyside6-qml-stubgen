@@ -53,3 +53,6 @@ warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
 local_partial_types = true
+
+[tool.black]
+extend-exclude = "_version.py"
