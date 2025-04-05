@@ -54,6 +54,8 @@ Generate QML stub files (.qmltypes) from Python modules (which use PySide6)
 
 Usage:
     pyside6-qml-stubgen <in-dir>... --out-dir=<out-dir> [--ignore=<path>...] [--metatypes-dir=<dir>] [--qmltyperegistrar-path=<path>] [--force-rebuild] [--file-relative-path=<div>] [--extra-external-modules=<modules>]
+    pyside6-qml-stubgen (-h | --help)
+    pyside6-qml-stubgen --version
 
 Options:
     --ignore=<path>                     Ignore all Python files that are children of this path
@@ -63,4 +65,6 @@ Options:
     --file-relative-path=<div>          Make all paths in generated type files relative to this path
                                             (useful for if the generated stubs need to be used on different systems)
     --extra-external-modules=<modules>  Additional modules which should be assumed to contain QML exposed types (comma separated)
+    -h --help                           Show this screen
+    --version                           Show version
 ```

@@ -5,6 +5,8 @@ import typing
 
 import pydantic
 
+from . import _version
+
 
 @dataclasses.dataclass
 class PythonModuleMetadata:
@@ -16,6 +18,7 @@ class PythonModuleMetadata:
 @dataclasses.dataclass
 class PythonModulesMetadata:
     modules: typing.Mapping[str, PythonModuleMetadata | None]
+    generating_version: str = ""
 
 
 PYTHON_MODULES_METADATA_TYPE_ADAPTER = pydantic.TypeAdapter(PythonModulesMetadata)
@@ -23,9 +26,11 @@ PYTHON_MODULES_METADATA_TYPE_ADAPTER = pydantic.TypeAdapter(PythonModulesMetadat
 
 def load_modules_metadata(dir_path: pathlib.Path) -> PythonModulesMetadata:
     if (dir_path / "metadata.json").exists():
-        return PYTHON_MODULES_METADATA_TYPE_ADAPTER.validate_json(
+        metadata = PYTHON_MODULES_METADATA_TYPE_ADAPTER.validate_json(
             (dir_path / "metadata.json").read_bytes()
         )
+        if metadata.generating_version == _version.__version__:
+            return metadata
     return PythonModulesMetadata({})
 
 

@@ -13,6 +13,7 @@ import typing
 from PySide6 import QtCore
 
 from . import dirty_file_detection, pyside_patching, qmlregistrar_types
+from ._version import __version__, __version_tuple__
 
 
 def parse_module(
@@ -267,7 +268,10 @@ def import_dirty_modules(
         )
 
     dirty_file_detection.save_modules_metadata(
-        out_dir, dirty_file_detection.PythonModulesMetadata(module_metadata)
+        out_dir,
+        dirty_file_detection.PythonModulesMetadata(
+            module_metadata, generating_version=__version__
+        ),
     )
 
     extra_info.resolve_delayed()
