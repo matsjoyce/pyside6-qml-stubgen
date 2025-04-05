@@ -355,7 +355,7 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
 
 def patch_builtins(info: ExtraCollectedInfo) -> None:
     @patch_with(builtins)
-    def __import__(
+    def __orig_import__(
         name: str,
         globals: typing.Mapping[str, object] | None = None,
         locals: typing.Mapping[str, object] | None = None,
