@@ -38,6 +38,9 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.build.hooks.vcs]
+version-file = "pyside6_qml_stubgen/_version.py"
+
 [tool.mypy]
 python_version = "3.10"
 warn_unused_configs = true
