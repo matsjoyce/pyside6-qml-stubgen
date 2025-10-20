@@ -131,6 +131,7 @@ Module {
             Parameter { name: "z"; type: "Normal"; isPointer: true }
         }
         Method { name: "slot2"; type: "Uncreatable"; isPointer: true }
+        Method { name: "slot3"; type: "bool" }
     }
     Component {
         file: "in/clses.py"

@@ -22,7 +22,7 @@ jobs:
           - os: ubuntu-latest
             pyside6_version: 6.7.3
           - os: ubuntu-latest
-            pyside6_version: 6.9.0
+            pyside6_version: 6.9.3
             build_wheel: true
     runs-on: ${{ matrix.os }}
     name: "Test on ${{ matrix.os }} with PySide6 ${{ matrix.pyside6_version }}"

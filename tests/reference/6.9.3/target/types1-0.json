@@ -239,6 +239,12 @@
                         "name": "slot2",
                         "arguments": [],
                         "returnType": "Uncreatable*"
+                    },
+                    {
+                        "access": "public",
+                        "name": "slot3",
+                        "arguments": [],
+                        "returnType": "bool"
                     }
                 ]
             }

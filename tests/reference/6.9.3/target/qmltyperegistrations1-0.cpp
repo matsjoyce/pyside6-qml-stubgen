@@ -30,7 +30,7 @@ Q_QMLTYPE_EXPORT void qml_register_types_target()
     QMetaType::fromType<QStandardItemModel *>().id();
     qmlRegisterTypesAndRevisions<SignalsAndProperties>("target", 1);
     qmlRegisterAnonymousType<QAbstractItemModel, 254>("target", 1);
-    QMetaType::fromType<SignalsAndProperties::Flags>().id();
+    qmlRegisterEnum<SignalsAndProperties::Flags>("SignalsAndProperties::Flags");
     qmlRegisterTypesAndRevisions<Singleton>("target", 1);
     qmlRegisterTypesAndRevisions<Singleton2>("target", 1);
     qmlRegisterTypesAndRevisions<Singleton3>("target", 1);

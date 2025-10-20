@@ -61,3 +61,6 @@ class SignalsAndProperties(QtGui.QStandardItemModel):
 
     @QtCore.Slot(result=Uncreatable)
     def slot2(self) -> Uncreatable: ...
+
+    @QtCore.Slot(result=bool)
+    def slot3(self) -> bool: ...
