@@ -327,7 +327,7 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
         result: type | str | None = None,
         **kwargs: typing.Any,
     ) -> typing.Callable:
-        slot = old_fn(*types, **kwargs)
+        slot = old_fn(*types, **kwargs, result=result)
 
         def w(f: typing.Callable) -> typing.Callable:
             info.signal_types[f] = (types, result)  # type: ignore[index]
