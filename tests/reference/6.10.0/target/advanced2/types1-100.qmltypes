@@ -8,6 +8,7 @@ import QtQuick.tooling 1.2
 Module {
     Component {
         file: "in/advanced2.py"
+        lineNumber: 16
         name: "Layout2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -17,6 +18,7 @@ Module {
     }
     Component {
         file: "in/advanced2.py"
+        lineNumber: 9
         name: "LayoutAttached2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -26,47 +28,19 @@ Module {
     }
     Component {
         file: "in/advanced2.py"
+        lineNumber: 19
         name: "LineEditorExtension2"
         accessSemantics: "reference"
         prototype: "QObject"
     }
     Component {
         file: "in/advanced2.py"
+        lineNumber: 30
         name: "LineEditor2"
         accessSemantics: "reference"
         prototype: "QObject"
         extension: "LineEditorExtension2"
         exports: ["target.advanced2/LineEditor2 1.0"]
         exportMetaObjectRevisions: [256]
-    }
-    Component {
-        file: "qobject.h"
-        name: "QObject"
-        accessSemantics: "reference"
-        Property {
-            name: "objectName"
-            type: "QString"
-            bindable: "bindableObjectName"
-            read: "objectName"
-            write: "setObjectName"
-            notify: "objectNameChanged"
-            index: 0
-        }
-        Signal {
-            name: "destroyed"
-            Parameter { type: "QObject"; isPointer: true }
-        }
-        Signal { name: "destroyed"; isCloned: true }
-        Signal {
-            name: "objectNameChanged"
-            Parameter { name: "objectName"; type: "QString" }
-        }
-        Method { name: "deleteLater" }
-        Method {
-            name: "QObject"
-            isConstructor: true
-            Parameter { name: "parent"; type: "QObject"; isPointer: true }
-        }
-        Method { name: "QObject"; isCloned: true; isConstructor: true }
     }
 }

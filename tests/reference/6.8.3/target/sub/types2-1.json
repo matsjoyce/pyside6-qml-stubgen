@@ -5,6 +5,7 @@
                 "className": "Obj",
                 "qualifiedClassName": "Obj",
                 "object": true,
+                "lineNumber": 11,
                 "superClasses": [
                     {
                         "access": "public",
@@ -20,9 +21,17 @@
                 "enums": [],
                 "properties": [
                     {
-                        "name": "anon",
-                        "type": "Anonymous*",
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
                         "index": 1,
+                        "lineNumber": 12,
+                        "name": "anon",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "Anonymous*",
+                        "user": false,
                         "read": "anon"
                     }
                 ],
@@ -30,7 +39,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 2,
         "QML_IMPORT_MINOR_VERSION": 1,
         "QT_MODULES": [
