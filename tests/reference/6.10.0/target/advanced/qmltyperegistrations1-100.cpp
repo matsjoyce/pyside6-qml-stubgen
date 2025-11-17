@@ -7,7 +7,9 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlmoduleregistration.h>
 
-#include <in/advanced.py>
+#if __has_include(<in/advanced.py>)
+#  include <in/advanced.py>
+#endif
 
 
 #if !defined(QT_STATIC)
@@ -18,11 +20,12 @@
 Q_QMLTYPE_EXPORT void qml_register_types_target_advanced()
 {
     qmlRegisterModule("target.advanced", 1, 0);
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     qmlRegisterTypesAndRevisions<Layout>("target.advanced", 1);
     qmlRegisterTypesAndRevisions<LayoutAttached>("target.advanced", 1);
     QMetaType::fromType<LineEditorExtension *>().id();
     qmlRegisterTypesAndRevisions<LineEditorForeign>("target.advanced", 1);
-    QMetaType::fromType<QObject *>().id();
+    QT_WARNING_POP
     qmlRegisterModule("target.advanced", 1, 100);
 }
 

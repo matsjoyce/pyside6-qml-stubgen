@@ -33,7 +33,7 @@ def parse_module(
         ret.append(
             qmlregistrar_types.Module(
                 classes=[parse_class(cls, depends_on, extra_info)],
-                outputRevision=68,
+                outputRevision=69,
                 QML_IMPORT_MAJOR_VERSION=major,
                 QML_IMPORT_MINOR_VERSION=minor,
                 QT_MODULES=sorted(
@@ -65,6 +65,7 @@ def parse_class(
         className=meta.className(),
         qualifiedClassName=cls.__qualname__,
         object=True,
+        lineNumber=extra_info.find_line_number(cls),
         superClasses=[
             qmlregistrar_types.SuperClass(
                 access="public", name=meta.superClass().className()
@@ -112,7 +113,7 @@ def parse_enum(enum: QtCore.QMetaEnum) -> qmlregistrar_types.Enum:
         isClass=enum.isScoped(),
         isFlag=enum.isFlag(),
         name=str(enum.enumName()),
-        type="quint16",
+        lineNumber=0,  # TODO: Bit tricky as we don't get a reference to the class or module+name anywhere
         values=[str(enum.key(i)) for i in range(enum.keyCount())],
     )
 
@@ -142,9 +143,20 @@ def parse_property(
     return qmlregistrar_types.Property(
         name=str(prop.name()),
         type=resolve_type_name(
-            prop.typeName(), t, depends_on, extra_info  # type: ignore[arg-type]
+            str(prop.typeName()),
+            t,
+            depends_on,
+            extra_info,
         ),
         index=prop.propertyIndex(),
+        lineNumber=extra_info.find_line_number(p.fget),
+        constant=prop.isConstant(),
+        designable=prop.isDesignable(),
+        final=prop.isFinal(),
+        required=prop.isRequired(),
+        scriptable=prop.isScriptable(),
+        stored=prop.isStored(),
+        user=prop.isUser(),
         notify=(
             bytes(prop.notifySignal().name().data()).decode()
             if prop.hasNotifySignal()
@@ -170,6 +182,9 @@ def parse_method(
     return qmlregistrar_types.Method(
         access="public",
         name=bytes(meth.name().data()).decode(),
+        index=meth.methodIndex(),
+        lineNumber=extra_info.find_line_number(m),
+        isConst=meth.isConst(),
         arguments=[
             qmlregistrar_types.Argument(
                 name=bytes(meth.parameterNames()[i].data()).decode() or n,

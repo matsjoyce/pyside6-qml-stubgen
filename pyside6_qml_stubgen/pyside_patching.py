@@ -28,6 +28,9 @@ class ExtraCollectedInfo:
     module_dependencies: typing.DefaultDict[str, set[str]] = dataclasses.field(
         default_factory=lambda: collections.defaultdict(set)
     )
+    line_numbers: dict[QtCore.Signal | typing.Callable | type, int] = dataclasses.field(
+        default_factory=dict
+    )
 
     def lookup_cls_module(self, cls: type[QtCore.QObject]) -> str | None:
         for (uri, major, minor), clses in self.registered_classes.items():
@@ -41,8 +44,10 @@ class ExtraCollectedInfo:
         version_major: int,
         version_minor: int,
         type_obj: type[QtCore.QObject],
+        line_number: int,
     ) -> None:
         self.registered_classes[uri, version_major, version_minor].add(type_obj)
+        self.line_numbers[type_obj] = line_number
         for base_cls in type_obj.__mro__:
             if isinstance(base_cls, type) and issubclass(base_cls, QtCore.QObject):
                 self.delayed_registrations[type_obj].add(base_cls)
@@ -57,6 +62,21 @@ class ExtraCollectedInfo:
                     self.registered_classes[module].add(linked_cls)
         self.delayed_registrations.clear()
 
+    def find_line_number(self, obj: QtCore.Signal | typing.Callable | type) -> int:
+        if obj in self.line_numbers:
+            return self.line_numbers[obj]
+        elif isinstance(obj, types.FunctionType):
+            return obj.__code__.co_firstlineno
+        elif isinstance(obj, type):
+            if lineno := getattr(obj, "__firstlineno__", None):
+                return lineno
+            try:
+                return inspect.getsourcelines(obj)[1]
+            except OSError:
+                return 0
+        else:
+            return 0
+
 
 def patch_with(mod: types.ModuleType) -> typing.Callable[[typing.Callable], None]:
     def w(fn: typing.Callable) -> None:
@@ -65,6 +85,18 @@ def patch_with(mod: types.ModuleType) -> typing.Callable[[typing.Callable], None
         setattr(mod, name, lambda *args, **kwargs: fn(*args, **kwargs, old_fn=old))
 
     return w
+
+
+def go_up(frame: types.FrameType | None, levels: int) -> types.FrameType | None:
+    if levels == 0:
+        return frame
+    return go_up(frame.f_back, levels - 1) if frame else None
+
+
+def get_line_number(stack_levels: int = 3) -> int:
+    frame = go_up(inspect.currentframe(), stack_levels)
+    assert frame is not None, "No caller frame"
+    return frame.f_lineno
 
 
 def patch_functions(info: ExtraCollectedInfo) -> None:
@@ -81,7 +113,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.add_cls(uri, version_major, version_minor, type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj, get_line_number())
         old_fn(type_obj, uri, version_major, version_minor, qml_name, callback)
 
     @patch_with(QtQml)
@@ -97,7 +129,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Singleton", "true"))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.add_cls(uri, version_major, version_minor, type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj, get_line_number())
         old_fn(
             type_obj,
             uri,
@@ -118,7 +150,7 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         old_fn: typing.Callable,
     ) -> None:
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.add_cls(uri, version_major, version_minor, type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj, get_line_number())
         old_fn(type_obj, uri, version_major, version_minor, qml_name)
 
     @patch_with(QtQml)
@@ -148,16 +180,11 @@ def patch_functions(info: ExtraCollectedInfo) -> None:
         info.extra_class_infos[type_obj].append(("QML.Creatable", "false"))
         info.extra_class_infos[type_obj].append(("QML.UncreatableReason", message))
         info.extra_class_infos[type_obj].append(("QML.Element", qml_name))
-        info.add_cls(uri, version_major, version_minor, type_obj)
+        info.add_cls(uri, version_major, version_minor, type_obj, get_line_number())
         old_fn(type_obj, uri, version_major, version_minor, qml_name, message)
 
 
 def patch_class_decorators(info: ExtraCollectedInfo) -> None:
-    def go_up(frame: types.FrameType | None, levels: int) -> types.FrameType | None:
-        if levels == 0:
-            return frame
-        return go_up(frame.f_back, levels - 1) if frame else None
-
     def get_module(stack_levels: int = 3) -> tuple[str, int, int]:
         frame = go_up(inspect.currentframe(), stack_levels)
         assert frame is not None, "No caller frame"
@@ -192,7 +219,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "auto"))
         mod_info = get_module()
-        info.add_cls(*mod_info, cls)
+        info.add_cls(*mod_info, cls, get_line_number())
         with module_in_globals(*mod_info):
             return old_fn(cls)
 
@@ -202,7 +229,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
     ) -> type[T_TypeQObject]:
         info.extra_class_infos[cls].append(("QML.Element", "anonymous"))
         mod_info = get_module()
-        info.add_cls(*mod_info, cls)
+        info.add_cls(*mod_info, cls, get_line_number())
         with module_in_globals(*mod_info):
             return old_fn(cls)
 
@@ -213,7 +240,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
         def w(cls: type[T_TypeQObject]) -> type[T_TypeQObject]:
             info.extra_class_infos[cls].append(("QML.Element", name))
             mod_info = get_module(stack_levels=2)
-            info.add_cls(*mod_info, cls)
+            info.add_cls(*mod_info, cls, get_line_number(stack_levels=2))
             with module_in_globals(*mod_info):
                 return old_fn(name)(cls)
 
@@ -242,7 +269,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             except KeyError:
                 info.delayed_registrations[cls].add(type_obj)
             else:
-                info.add_cls(*module, cls)
+                info.add_cls(*module, cls, get_line_number(stack_levels=4))
             info.extra_class_infos[cls].append(
                 ("QML.Foreign", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -260,7 +287,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             except KeyError:
                 info.delayed_registrations[cls].add(type_obj)
             else:
-                info.add_cls(*module, cls)
+                info.add_cls(*module, cls, get_line_number(stack_levels=4))
             info.extra_class_infos[cls].append(
                 ("QML.Extended", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -278,7 +305,7 @@ def patch_class_decorators(info: ExtraCollectedInfo) -> None:
             except KeyError:
                 info.delayed_registrations[cls].add(type_obj)
             else:
-                info.add_cls(*module, cls)
+                info.add_cls(*module, cls, get_line_number(stack_levels=4))
             info.extra_class_infos[cls].append(
                 ("QML.Attached", type_obj.staticMetaObject.className())  # type: ignore[attr-defined]
             )
@@ -344,6 +371,7 @@ def patch_meta_system(info: ExtraCollectedInfo) -> None:
         def __call__(self, *types: type | str, **kwargs: typing.Any) -> QtCore.Signal:
             sig = QtSignal(*types, **kwargs)  # type: ignore[arg-type]
             info.signal_types[sig] = (types, None)
+            info.line_numbers[sig] = get_line_number(stack_levels=2)
 
             return sig
 

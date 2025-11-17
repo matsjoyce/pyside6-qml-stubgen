@@ -21,6 +21,9 @@ pip install ./pyside6-qml-stubgen
 
 This tool has been tested on Linux, Windows and MacOS using pip-installed PySide6 (on GitHub Actions), and on Arch Linux using system packages. It does not run with PyQt6, although it should be possible in theory (send a PR if you get it working). And finally, it does not run using Qt 5 (PySide2 or PyQt5), as that version is no longer being developed, and QML in Qt 5 has less features than in Qt 6, making it a less attractive target for this sort of tool.
 
+> [!WARNING]
+> Does not work on Qt 6.10 from PyPI on Linux and MacOS due to https://bugreports.qt.io/browse/PYSIDE-3241
+
 Simple example
 --------------
 

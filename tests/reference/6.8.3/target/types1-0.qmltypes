@@ -69,7 +69,6 @@ Module {
         Enum {
             name: "Flags"
             isScoped: true
-            type: "ushort"
             values: ["YES", "NO", "MAYBE"]
         }
         Property {
@@ -79,6 +78,7 @@ Module {
             read: "anon"
             index: 2
             isReadonly: true
+            isConstant: true
         }
         Property {
             name: "norm"

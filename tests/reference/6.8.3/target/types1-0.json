@@ -5,6 +5,7 @@
                 "className": "Anonymous",
                 "qualifiedClassName": "Anonymous",
                 "object": true,
+                "lineNumber": 28,
                 "superClasses": [
                     {
                         "access": "public",
@@ -23,7 +24,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -40,6 +41,7 @@
                 "className": "Named",
                 "qualifiedClassName": "Named",
                 "object": true,
+                "lineNumber": 24,
                 "superClasses": [
                     {
                         "access": "public",
@@ -58,7 +60,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -75,6 +77,7 @@
                 "className": "Named2",
                 "qualifiedClassName": "Named2",
                 "object": true,
+                "lineNumber": 15,
                 "superClasses": [
                     {
                         "access": "public",
@@ -93,7 +96,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -109,6 +112,7 @@
                 "className": "Normal",
                 "qualifiedClassName": "Normal",
                 "object": true,
+                "lineNumber": 20,
                 "superClasses": [
                     {
                         "access": "public",
@@ -127,7 +131,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -144,6 +148,7 @@
                 "className": "SignalsAndProperties",
                 "qualifiedClassName": "SignalsAndProperties",
                 "object": true,
+                "lineNumber": 39,
                 "superClasses": [
                     {
                         "access": "public",
@@ -169,7 +174,7 @@
                         "isClass": true,
                         "isFlag": false,
                         "name": "Flags",
-                        "type": "quint16",
+                        "lineNumber": 0,
                         "values": [
                             "YES",
                             "NO",
@@ -179,15 +184,31 @@
                 ],
                 "properties": [
                     {
-                        "name": "anon",
-                        "type": "Anonymous*",
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
                         "index": 2,
+                        "lineNumber": 46,
+                        "name": "anon",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "Anonymous*",
+                        "user": false,
                         "read": "anon"
                     },
                     {
-                        "name": "norm",
-                        "type": "Normal*",
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
                         "index": 3,
+                        "lineNumber": 51,
+                        "name": "norm",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "Normal*",
+                        "user": false,
                         "notify": "normChanged",
                         "read": "norm",
                         "write": "norm"
@@ -211,7 +232,10 @@
                                 "type": "bool"
                             }
                         ],
-                        "returnType": "void"
+                        "returnType": "void",
+                        "index": 78,
+                        "lineNumber": 49,
+                        "isConst": false
                     }
                 ],
                 "slots": [
@@ -232,24 +256,33 @@
                                 "type": "Normal*"
                             }
                         ],
-                        "returnType": "void"
+                        "returnType": "void",
+                        "index": 79,
+                        "lineNumber": 57,
+                        "isConst": false
                     },
                     {
                         "access": "public",
                         "name": "slot2",
                         "arguments": [],
-                        "returnType": "Uncreatable*"
+                        "returnType": "Uncreatable*",
+                        "index": 80,
+                        "lineNumber": 62,
+                        "isConst": false
                     },
                     {
                         "access": "public",
                         "name": "slot3",
                         "arguments": [],
-                        "returnType": "bool"
+                        "returnType": "bool",
+                        "index": 81,
+                        "lineNumber": 65,
+                        "isConst": false
                     }
                 ]
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -268,6 +301,7 @@
                 "className": "Singleton",
                 "qualifiedClassName": "Singleton",
                 "object": true,
+                "lineNumber": 33,
                 "superClasses": [
                     {
                         "access": "public",
@@ -290,7 +324,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -307,6 +341,7 @@
                 "className": "Singleton2",
                 "qualifiedClassName": "Singleton2",
                 "object": true,
+                "lineNumber": 21,
                 "superClasses": [
                     {
                         "access": "public",
@@ -329,7 +364,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -345,6 +380,7 @@
                 "className": "Singleton3",
                 "qualifiedClassName": "Singleton3",
                 "object": true,
+                "lineNumber": 34,
                 "superClasses": [
                     {
                         "access": "public",
@@ -364,9 +400,17 @@
                 "enums": [],
                 "properties": [
                     {
-                        "name": "norm",
-                        "type": "Named2*",
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
                         "index": 1,
+                        "lineNumber": 27,
+                        "name": "norm",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "Named2*",
+                        "user": false,
                         "notify": "normChanged",
                         "read": "getNorm",
                         "write": "setNorm"
@@ -390,13 +434,16 @@
                                 "type": "bool"
                             }
                         ],
-                        "returnType": "void"
+                        "returnType": "void",
+                        "index": 4,
+                        "lineNumber": 25,
+                        "isConst": false
                     }
                 ],
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -414,6 +461,7 @@
                 "className": "Uncreatable",
                 "qualifiedClassName": "Uncreatable",
                 "object": true,
+                "lineNumber": 11,
                 "superClasses": [
                     {
                         "access": "public",
@@ -436,7 +484,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -453,6 +501,7 @@
                 "className": "UncreatableWithReason",
                 "qualifiedClassName": "UncreatableWithReason",
                 "object": true,
+                "lineNumber": 16,
                 "superClasses": [
                     {
                         "access": "public",
@@ -479,7 +528,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [
@@ -496,6 +545,7 @@
                 "className": "UncreatableWithReason2",
                 "qualifiedClassName": "UncreatableWithReason2",
                 "object": true,
+                "lineNumber": 7,
                 "superClasses": [
                     {
                         "access": "public",
@@ -522,7 +572,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 0,
         "QT_MODULES": [

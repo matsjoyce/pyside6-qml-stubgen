@@ -17,13 +17,25 @@ class Method:
     name: str
     arguments: typing.Sequence[Argument]
     returnType: str
+    index: int
+    lineNumber: int
+    isConst: bool
 
 
 @dataclasses.dataclass(frozen=True)
 class Property:
-    name: str
-    type: str
+    constant: bool
+    designable: bool
+    final: bool
     index: int
+    lineNumber: int
+    name: str
+    required: bool
+    scriptable: bool
+    stored: bool
+    type: str
+    user: bool
+    bindable: str | None = None
     notify: str | None = None
     read: str | None = None
     write: str | None = None
@@ -34,8 +46,9 @@ class Enum:
     isClass: bool
     isFlag: bool
     name: str
-    type: str
+    lineNumber: int
     values: typing.Sequence[str]
+    type: str | None = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -55,6 +68,7 @@ class Class:
     className: str
     qualifiedClassName: str
     object: bool
+    lineNumber: int
     superClasses: typing.Sequence[SuperClass]
     classInfos: typing.Sequence[ClassInfo]
     enums: typing.Sequence[Enum]
@@ -66,7 +80,7 @@ class Class:
 @dataclasses.dataclass(frozen=True)
 class Module:
     classes: typing.Sequence[Class]
-    outputRevision: typing.Literal[68]
+    outputRevision: typing.Literal[69]
     QML_IMPORT_MAJOR_VERSION: int
     QML_IMPORT_MINOR_VERSION: int
     QT_MODULES: typing.Sequence[str]

@@ -5,6 +5,7 @@
                 "className": "Layout2",
                 "qualifiedClassName": "Layout2",
                 "object": true,
+                "lineNumber": 16,
                 "superClasses": [
                     {
                         "access": "public",
@@ -27,7 +28,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 100,
         "QT_MODULES": [
@@ -43,6 +44,7 @@
                 "className": "LayoutAttached2",
                 "qualifiedClassName": "LayoutAttached2",
                 "object": true,
+                "lineNumber": 9,
                 "superClasses": [
                     {
                         "access": "public",
@@ -58,9 +60,17 @@
                 "enums": [],
                 "properties": [
                     {
-                        "name": "margins",
-                        "type": "QMargins",
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
                         "index": 1,
+                        "lineNumber": 5,
+                        "name": "margins",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QMargins",
+                        "user": false,
                         "read": "margins"
                     }
                 ],
@@ -68,7 +78,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 100,
         "QT_MODULES": [
@@ -84,6 +94,7 @@
                 "className": "LineEditor2",
                 "qualifiedClassName": "LineEditor2",
                 "object": true,
+                "lineNumber": 22,
                 "superClasses": [
                     {
                         "access": "public",
@@ -97,7 +108,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 100,
         "QT_MODULES": [
@@ -113,6 +124,7 @@
                 "className": "LineEditorExtension2",
                 "qualifiedClassName": "LineEditorExtension2",
                 "object": true,
+                "lineNumber": 19,
                 "superClasses": [
                     {
                         "access": "public",
@@ -126,7 +138,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 100,
         "QT_MODULES": [
@@ -142,6 +154,7 @@
                 "className": "LineEditorForeign2",
                 "qualifiedClassName": "LineEditorForeign2",
                 "object": true,
+                "lineNumber": 30,
                 "superClasses": [
                     {
                         "access": "public",
@@ -168,7 +181,7 @@
                 "slots": []
             }
         ],
-        "outputRevision": 68,
+        "outputRevision": 69,
         "QML_IMPORT_MAJOR_VERSION": 1,
         "QML_IMPORT_MINOR_VERSION": 100,
         "QT_MODULES": [

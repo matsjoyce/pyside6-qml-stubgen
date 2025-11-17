@@ -8,6 +8,7 @@ import QtQuick.tooling 1.2
 Module {
     Component {
         file: "in/submodule.py"
+        lineNumber: 11
         name: "Obj"
         accessSemantics: "reference"
         prototype: "QObject"

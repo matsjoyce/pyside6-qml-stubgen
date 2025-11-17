@@ -8,12 +8,14 @@ import QtQuick.tooling 1.2
 Module {
     Component {
         file: "in/clses.py"
+        lineNumber: 28
         name: "Anonymous"
         accessSemantics: "reference"
         prototype: "QObject"
     }
     Component {
         file: "in/clses.py"
+        lineNumber: 24
         name: "Named"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -22,6 +24,7 @@ Module {
     }
     Component {
         file: "in/clses2.py"
+        lineNumber: 15
         name: "Named2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -30,6 +33,7 @@ Module {
     }
     Component {
         file: "in/clses.py"
+        lineNumber: 20
         name: "Normal"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -37,37 +41,8 @@ Module {
         exportMetaObjectRevisions: [256]
     }
     Component {
-        file: "qobject.h"
-        name: "QObject"
-        accessSemantics: "reference"
-        Property {
-            name: "objectName"
-            type: "QString"
-            bindable: "bindableObjectName"
-            read: "objectName"
-            write: "setObjectName"
-            notify: "objectNameChanged"
-            index: 0
-        }
-        Signal {
-            name: "destroyed"
-            Parameter { type: "QObject"; isPointer: true }
-        }
-        Signal { name: "destroyed"; isCloned: true }
-        Signal {
-            name: "objectNameChanged"
-            Parameter { name: "objectName"; type: "QString" }
-        }
-        Method { name: "deleteLater" }
-        Method {
-            name: "QObject"
-            isConstructor: true
-            Parameter { name: "parent"; type: "QObject"; isPointer: true }
-        }
-        Method { name: "QObject"; isCloned: true; isConstructor: true }
-    }
-    Component {
         file: "qstandarditemmodel.h"
+        lineNumber: 278
         name: "QStandardItemModel"
         accessSemantics: "reference"
         prototype: "QAbstractItemModel"
@@ -91,6 +66,7 @@ Module {
     }
     Component {
         file: "in/clses.py"
+        lineNumber: 39
         name: "SignalsAndProperties"
         accessSemantics: "reference"
         prototype: "QStandardItemModel"
@@ -98,7 +74,7 @@ Module {
         exportMetaObjectRevisions: [256]
         Enum {
             name: "Flags"
-            type: "ushort"
+            isScoped: true
             values: ["YES", "NO", "MAYBE"]
         }
         Property {
@@ -108,6 +84,7 @@ Module {
             read: "anon"
             index: 2
             isReadonly: true
+            isPropertyConstant: true
         }
         Property {
             name: "norm"
@@ -135,6 +112,7 @@ Module {
     }
     Component {
         file: "in/clses.py"
+        lineNumber: 33
         name: "Singleton"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -145,6 +123,7 @@ Module {
     }
     Component {
         file: "in/clses2.py"
+        lineNumber: 21
         name: "Singleton2"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -155,6 +134,7 @@ Module {
     }
     Component {
         file: "in/clses2.py"
+        lineNumber: 34
         name: "Singleton3"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -180,6 +160,7 @@ Module {
     }
     Component {
         file: "in/clses.py"
+        lineNumber: 11
         name: "Uncreatable"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -189,6 +170,7 @@ Module {
     }
     Component {
         file: "in/clses.py"
+        lineNumber: 16
         name: "UncreatableWithReason"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -198,6 +180,7 @@ Module {
     }
     Component {
         file: "in/clses2.py"
+        lineNumber: 7
         name: "UncreatableWithReason2"
         accessSemantics: "reference"
         prototype: "QObject"

@@ -20,6 +20,7 @@ Module {
             read: "anon"
             index: 1
             isReadonly: true
+            isConstant: true
         }
     }
 }
